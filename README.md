@@ -46,7 +46,7 @@ To send a request, you:
 // a client can be shared by different commands.
 const client = new SlackClient({
   credentials: {
-    token: "YOUR_TOKEN", // required
+    token: "YOUR_TOKEN", // required // xoxb-xxxxxxxx
     channel: "YOUR_CHANNEL_ID", // required
   },
 });

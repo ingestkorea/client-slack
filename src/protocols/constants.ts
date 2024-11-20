@@ -33,7 +33,7 @@ export const parseErrorBody = async (output: HttpResponse): Promise<void> => {
     code: 400,
     type: "Bad Request",
     message: "Invalid Request",
-    description: "content-type is not application/json",
+    description: "response content-type is not application/json",
   });
   if (ingestkoreaErrorCodeChecker(statusCode)) customError.error.code = statusCode;
   if (!isValid) throw customError;

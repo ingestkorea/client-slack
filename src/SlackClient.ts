@@ -1,7 +1,12 @@
 import { NodeHttpHandler } from "@ingestkorea/util-http-handler";
 import { IngestkoreaError } from "@ingestkorea/util-error-handler";
 import { SlackCommand } from "./models";
-import { middlewareSlackAuth, middlewareIngestkoreaMetadata } from "./middleware";
+import {
+  middlewareSlackAuth,
+  middlewareIngestkoreaMetadata,
+  middlewareRetry,
+  middlewareSortHeaders,
+} from "./middleware";
 
 export type Credentials = {
   token: string;
@@ -25,13 +30,21 @@ export class SlackClient {
     };
     this.requestHandler = new NodeHttpHandler({ connectionTimeout: 3000, socketTimeout: 3000 });
   }
+
   async send<T, P>(command: SlackCommand<T, P, SlackClientResolvedConfig>): Promise<P> {
     let request = await command.serialize(command.input, this.config);
     request = await middlewareSlackAuth(request, this.config);
     request = await middlewareIngestkoreaMetadata(request, this.config);
-    let { response } = await this.requestHandler.handle(request);
+    request = await middlewareSortHeaders(request, this.config);
+    let {
+      output: { $metadata },
+      response,
+    } = await middlewareRetry(request, this.config, this.requestHandler);
     let output = await command.deserialize(response);
-    return output;
+    return {
+      $metadata,
+      ...output,
+    };
   }
 }
 

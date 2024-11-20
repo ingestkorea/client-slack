@@ -1,10 +1,8 @@
 import { HttpRequest } from "@ingestkorea/util-http-handler";
 import { SlackClientResolvedConfig } from "../SlackClient";
+import { BuildMiddleware } from "../models";
 
-export const middlewareSlackAuth = async (
-  request: HttpRequest,
-  config: SlackClientResolvedConfig
-): Promise<HttpRequest> => {
+export const middlewareSlackAuth: BuildMiddleware = async (request: HttpRequest, config: SlackClientResolvedConfig) => {
   const { token } = config.credentials;
   request.headers = {
     ...request.headers,

@@ -1,6 +1,6 @@
 import { HttpRequest, HttpResponse } from "@ingestkorea/util-http-handler";
 import { IngestkoreaError } from "@ingestkorea/util-error-handler";
-import { SlackCommand, SendMessageInput, SendMessageOutput } from "../models";
+import { SlackCommand, SendMessageInput, SendMessageOutput, MetadataBearer } from "../models";
 import { SlackClientResolvedConfig } from "../SlackClient";
 import {
   serializeIngestkorea_restJson_SendMessageCommand,
@@ -8,7 +8,7 @@ import {
 } from "../protocols/SendMessage";
 
 export interface SendMessageCommandInput extends SendMessageInput {}
-export interface SendMessageCommandOutput extends SendMessageOutput {}
+export interface SendMessageCommandOutput extends SendMessageOutput, MetadataBearer {}
 
 export class SendMessageCommand extends SlackCommand<
   SendMessageCommandInput,

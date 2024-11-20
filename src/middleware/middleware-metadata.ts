@@ -1,15 +1,16 @@
 import { HttpRequest } from "@ingestkorea/util-http-handler";
 import { SlackClientResolvedConfig } from "../SlackClient";
+import { BuildMiddleware } from "../models";
 
-export const middlewareIngestkoreaMetadata = async (
+export const middlewareIngestkoreaMetadata: BuildMiddleware = async (
   request: HttpRequest,
   config: SlackClientResolvedConfig
-): Promise<HttpRequest> => {
+) => {
   const { longDate } = convertFormatDate();
 
   request.headers = {
     ...request.headers,
-    ["user-agent"]: "@ingestkorea/client-slack/0.3.x",
+    ["user-agent"]: "@ingestkorea/client-slack/0.6.x",
     ["x-ingestkorea-date"]: longDate,
   };
   return request;

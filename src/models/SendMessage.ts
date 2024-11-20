@@ -45,7 +45,7 @@ export interface SectionBlock {
   text?: PlainText | Markdown;
   fields?: (PlainText | Markdown)[]; // 2000
   block_id?: string;
-  // accessory?: Object; // https://api.slack.com/reference/block-kit/blocks#section
+  accessory?: ButtonElement; // https://api.slack.com/reference/block-kit/blocks#section
   // expand?: boolean;
 }
 
@@ -77,4 +77,23 @@ export type Icons = {
   image_36?: string;
   image_48?: string;
   image_72?: string;
+};
+
+export type ButtonElement = {
+  type: "button";
+  text: PlainText;
+  action_id?: string;
+  url?: string;
+  value?: string;
+  style?: "primary" | "danger";
+  confirm?: Confirmation;
+};
+
+export type Confirmation = {
+  title: PlainText;
+  text: PlainText;
+  confirm: PlainText;
+  deny: PlainText;
+  style?: "primary" | "danger";
+  accessibility_label?: string;
 };
