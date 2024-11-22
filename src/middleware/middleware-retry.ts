@@ -1,9 +1,9 @@
-import { NodeHttpHandler, HttpRequest, HttpResponse } from "@ingestkorea/util-http-handler";
+import { NodeHttpHandler, HttpRequest } from "@ingestkorea/util-http-handler";
 import { IngestkoreaError } from "@ingestkorea/util-error-handler";
 import { SlackClientResolvedConfig } from "../SlackClient";
 import { DeserializeMiddleware } from "../models";
 
-const REQUEST_HEADER = "x-ingestkorea-retry";
+const REQUEST_HEADER = "x-ingestkorea-request";
 
 export const middlewareRetry: DeserializeMiddleware = async (
   request: HttpRequest,
@@ -21,19 +21,26 @@ export const middlewareRetry: DeserializeMiddleware = async (
   });
   while (true) {
     try {
+      request.headers[REQUEST_HEADER] = `attempt=${
+        attempts + 1
+      }; max=${maxAttempts}; totalRetryDelay=${totalRetryDelay}`;
+
       let { response } = await handler.handle(request);
       return {
         output: {
           $metadata: {
-            [REQUEST_HEADER]: `attempt=${attempts}`,
-            ...(request.headers[REQUEST_HEADER] && { [REQUEST_HEADER]: request.headers[REQUEST_HEADER] }),
+            attempts: attempts + 1,
+            totalRetryDelay: totalRetryDelay,
           },
         },
         response,
       };
     } catch (err) {
       attempts++;
-      if (attempts > maxAttempts) throw lastError;
+      if (attempts == maxAttempts) {
+        lastError.error.description.attempts = attempts;
+        throw lastError;
+      }
 
       const delay = attempts * 1000;
       totalRetryDelay += delay;
@@ -45,7 +52,6 @@ export const middlewareRetry: DeserializeMiddleware = async (
           detail: err.error.description,
         };
       }
-      request.headers[REQUEST_HEADER] = `attempt=${attempts}; max=${maxAttempts}; totalRetryDelay=${totalRetryDelay}`;
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }

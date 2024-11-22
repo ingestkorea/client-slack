@@ -10,6 +10,8 @@ import {
   HeaderBlock,
   PlainText,
   Markdown,
+  MetadataBearer,
+  ResponseMetadata,
 } from "../models";
 import { SlackClientResolvedConfig } from "../SlackClient";
 import { parseBody, parseErrorBody } from "./constants";
@@ -42,17 +44,40 @@ export const serializeIngestkorea_restJson_SendMessageCommand = async (
   });
 };
 
-export const deserializeIngestkorea_restJson_SendMessageCommand = async (
-  output: HttpResponse
-): Promise<SendMessageCommandOutput> => {
-  if (output.statusCode > 300) await parseErrorBody(output);
+export const deserializeMetadata = (response: HttpResponse): ResponseMetadata => {
+  return {
+    httpStatusCode: response.statusCode,
+  };
+};
 
-  const data: any = await parseBody(output);
+export const deserializeIngestkorea_restJson_SendMessageCommand = async (response: {
+  response: HttpResponse;
+  output: MetadataBearer;
+}): Promise<SendMessageCommandOutput> => {
+  const { response: httpResponse, output } = response;
+  if (httpResponse.statusCode > 300) await parseErrorBody(httpResponse);
+
+  const data: any = await parseBody(httpResponse);
   let contents: any = {};
   contents = deserializeIngestkorea_restJson_SendMessageOutput(data);
 
-  const response: SendMessageCommandOutput = {
+  return {
+    $metadata: {
+      ...deserializeMetadata(httpResponse),
+      ...output.$metadata,
+    },
     ...contents,
+  };
+};
+
+export const deserializeIngestkorea_restJson_SendMessageOutput = (output: any): SendMessageOutput => {
+  let response = {
+    ok: output.ok != null ? output.ok : undefined,
+    channel: output.channel ? output.channel : undefined,
+    ts: output.ts ? output.ts : undefined,
+    message: output.message ? deserializeIngestkorea_restJson_ReceiveMessage(output.message) : undefined,
+    error: output.error ? output.error : undefined,
+    errors: output.errors ? output.errors : undefined,
   };
   if (!response.ok)
     throw new IngestkoreaError({
@@ -63,17 +88,6 @@ export const deserializeIngestkorea_restJson_SendMessageCommand = async (
       ...(response.error && response.errors && { description: `[${response.error}]: ${response.errors.join(", ")}` }),
     });
   return response;
-};
-
-export const deserializeIngestkorea_restJson_SendMessageOutput = (output: any): SendMessageOutput => {
-  return {
-    ok: output.ok != null ? output.ok : undefined,
-    channel: output.channel ? output.channel : undefined,
-    ts: output.ts ? output.ts : undefined,
-    message: output.message ? deserializeIngestkorea_restJson_ReceiveMessage(output.message) : undefined,
-    error: output.error ? output.error : undefined,
-    errors: output.errors ? output.errors : undefined,
-  };
 };
 
 export const deserializeIngestkorea_restJson_ReceiveMessage = (output: any): ReceiveMessage => {

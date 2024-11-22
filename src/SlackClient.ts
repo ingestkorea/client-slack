@@ -6,19 +6,27 @@ import {
   middlewareIngestkoreaMetadata,
   middlewareRetry,
   middlewareSortHeaders,
+  middlewareSign,
 } from "./middleware";
 
 export type Credentials = {
+  token?: string;
+  channel?: string;
+  secret?: string;
+};
+
+export type ResolvedCredentials = {
   token: string;
   channel: string;
+  secret?: string;
 };
 
 export interface SlackClientConfig {
-  credentials?: Partial<Credentials>;
+  credentials?: Credentials;
 }
 
 export interface SlackClientResolvedConfig {
-  credentials: Credentials;
+  credentials: ResolvedCredentials;
 }
 
 export class SlackClient {
@@ -35,20 +43,15 @@ export class SlackClient {
     let request = await command.serialize(command.input, this.config);
     request = await middlewareSlackAuth(request, this.config);
     request = await middlewareIngestkoreaMetadata(request, this.config);
+    request = await middlewareSign(request, this.config);
     request = await middlewareSortHeaders(request, this.config);
-    let {
-      output: { $metadata },
-      response,
-    } = await middlewareRetry(request, this.config, this.requestHandler);
+    let response = await middlewareRetry(request, this.config, this.requestHandler);
     let output = await command.deserialize(response);
-    return {
-      $metadata,
-      ...output,
-    };
+    return output;
   }
 }
 
-const resolveCredentials = (config: SlackClientConfig): Required<Credentials> => {
+const resolveCredentials = (config: SlackClientConfig): ResolvedCredentials => {
   const { credentials } = config;
   let error = new IngestkoreaError({
     code: 401,

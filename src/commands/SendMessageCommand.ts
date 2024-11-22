@@ -39,7 +39,7 @@ export class SendMessageCommand extends SlackCommand<
     let request = await serializeIngestkorea_restJson_SendMessageCommand(input, config);
     return request;
   }
-  async deserialize(response: HttpResponse): Promise<SendMessageCommandOutput> {
+  async deserialize(response: { response: HttpResponse; output: MetadataBearer }): Promise<SendMessageCommandOutput> {
     let output = await deserializeIngestkorea_restJson_SendMessageCommand(response);
     return output;
   }

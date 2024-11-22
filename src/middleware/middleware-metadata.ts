@@ -6,13 +6,7 @@ export const middlewareIngestkoreaMetadata: BuildMiddleware = async (
   request: HttpRequest,
   config: SlackClientResolvedConfig
 ) => {
-  const { longDate } = convertFormatDate();
-
-  request.headers = {
-    ...request.headers,
-    ["user-agent"]: "@ingestkorea/client-slack/0.6.x",
-    ["x-ingestkorea-date"]: longDate,
-  };
+  request.headers["x-ingestkorea-user-agent"] = "@ingestkorea/client-slack/0.7.x";
   return request;
 };
 

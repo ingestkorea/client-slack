@@ -3,5 +3,7 @@ export interface MetadataBearer {
 }
 
 export interface ResponseMetadata {
-  ["x-ingestkorea-retry"]?: string;
+  httpStatusCode?: number;
+  attempts?: number;
+  totalRetryDelay?: number;
 }
