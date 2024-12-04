@@ -7,6 +7,10 @@ export interface MessagePayload {
   blocks?: (SectionBlock | DividerBlock | HeaderBlock)[];
   thread_ts?: string;
   mrkdwn?: boolean; // default true
+  response_url?: string;
+  response_type?: "in_channel";
+  replace_original?: boolean;
+  delete_original?: boolean;
 }
 
 export interface SendMessageOutput {

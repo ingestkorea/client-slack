@@ -26,6 +26,12 @@ export class SendMessageCommand extends SlackCommand<
       ...(input.blocks && { blocks: input.blocks }),
       ...(input.thread_ts && { thread_ts: input.thread_ts }),
       ...(input.mrkdwn && { mrkdwn: input.mrkdwn }),
+      ...(input.response_url && {
+        response_url: input.response_url.replace(/\\/gi, ""),
+        response_type: input.response_type ? input.response_type : "in_channel",
+        replace_original: input.replace_original != null ? input.replace_original : false,
+        delete_original: input.delete_original != null ? input.delete_original : false,
+      }),
     };
   }
   async serialize(input: SendMessageCommandInput, config: SlackClientResolvedConfig): Promise<HttpRequest> {

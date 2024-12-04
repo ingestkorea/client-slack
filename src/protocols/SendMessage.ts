@@ -21,8 +21,9 @@ export const serializeIngestkorea_restJson_SendMessageCommand = async (
   input: SendMessageCommandInput,
   config: SlackClientResolvedConfig
 ): Promise<HttpRequest> => {
-  const hostname = "slack.com";
-  const path = "/api/chat.postMessage";
+  const url = input.response_url ? new URL(input.response_url) : new URL("https://slack.com/api/chat.postMessage");
+  const hostname = url.hostname;
+  const path = url.pathname;
   const headers = {
     host: hostname,
     "content-type": "application/json; charset=utf-8",
@@ -33,6 +34,9 @@ export const serializeIngestkorea_restJson_SendMessageCommand = async (
     ...(input.blocks && { blocks: input.blocks }),
     ...(input.thread_ts && { thread_ts: input.thread_ts }),
     ...(input.mrkdwn && { mrkdwn: input.mrkdwn }),
+    ...(input.response_type && { response_type: input.response_type }),
+    ...(input.replace_original != null && { replace_original: input.replace_original }),
+    ...(input.delete_original != null && { delete_original: input.delete_original }),
   });
   return new HttpRequest({
     protocol: "https:",

@@ -1,12 +1,13 @@
 import { HttpRequest } from "@ingestkorea/util-http-handler";
 import { SlackClientResolvedConfig } from "../SlackClient";
 import { BuildMiddleware } from "../models";
+import { INGESTKOREA_USER_AGENT } from "./constatns";
 
 export const middlewareIngestkoreaMetadata: BuildMiddleware = async (
   request: HttpRequest,
   config: SlackClientResolvedConfig
 ) => {
-  request.headers["x-ingestkorea-user-agent"] = "@ingestkorea/client-slack/0.7.x";
+  request.headers[INGESTKOREA_USER_AGENT] = "@ingestkorea/client-slack/0.8.x";
   return request;
 };
 
