@@ -18,12 +18,13 @@ export class SendMessageCommand extends SlackCommand<
   input: SendMessageCommandInput;
   constructor(input: SendMessageCommandInput) {
     super(input);
+    let invalidBlocks = !input.blocks || !input.blocks.length;
     this.input = {
       ...input,
       text: input.text,
       ...(input.channel && { channel: input.channel }),
-      ...(!input.blocks && { blocks: [{ type: "section", text: { type: "plain_text", text: input.text } }] }),
       ...(input.blocks && { blocks: input.blocks }),
+      ...(invalidBlocks && { blocks: [{ type: "section", text: { type: "plain_text", text: input.text } }] }),
       ...(input.thread_ts && { thread_ts: input.thread_ts }),
       ...(input.mrkdwn && { mrkdwn: input.mrkdwn }),
       ...(input.response_url && {

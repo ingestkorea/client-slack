@@ -4,43 +4,50 @@ import { HttpResponse, collectBodyString, destroyStream } from "@ingestkorea/uti
 export const parseBody = async (output: HttpResponse): Promise<any> => {
   const { statusCode, headers, body: streamBody } = output;
 
-  const isValid = await verifyJsonHeader(headers["content-type"]);
+  let isValid = await verifyJsonHeader(headers["content-type"]);
+  let data = await collectBodyString(streamBody);
+
+  if (data == "ok") {
+    data = JSON.stringify({ ok: true });
+    isValid = true;
+  }
 
   if (!isValid) {
     await destroyStream(streamBody);
-    let customError = new IngestkoreaError({
-      code: 400,
+    let lastError = new IngestkoreaError({
+      code: ingestkoreaErrorCodeChecker(statusCode) ? statusCode : 400,
       type: "Bad Request",
       message: "Invalid Request",
       description: "content-type is not application/json",
     });
-    if (ingestkoreaErrorCodeChecker(statusCode)) customError.error.code = statusCode;
-    throw customError;
+    throw lastError;
   }
 
-  const data = await collectBodyString(streamBody);
   if (data.length) return JSON.parse(data);
   return {};
 };
 
 export const parseErrorBody = async (output: HttpResponse): Promise<void> => {
   const { statusCode, headers, body: streamBody } = output;
-  const isValid = await verifyJsonHeader(headers["content-type"]);
+
+  let isValid = await verifyJsonHeader(headers["content-type"]);
+  let data = await collectBodyString(streamBody);
+
+  if (data == "used_url" || data == "expired_url") {
+    data = JSON.stringify({ ok: false, error: data });
+    isValid = true;
+  }
 
   await destroyStream(streamBody);
 
-  let customError = new IngestkoreaError({
-    code: 400,
+  let lastError = new IngestkoreaError({
+    code: ingestkoreaErrorCodeChecker(statusCode) ? statusCode : 400,
     type: "Bad Request",
     message: "Invalid Request",
-    description: "response content-type is not application/json",
+    description: isValid && data.length ? JSON.parse(data) : "response content-type is not application/json",
   });
-  if (ingestkoreaErrorCodeChecker(statusCode)) customError.error.code = statusCode;
-  if (!isValid) throw customError;
 
-  const data = await collectBodyString(streamBody);
-  if (data.length) customError.error.description = JSON.parse(data);
-  throw customError;
+  throw lastError;
 };
 
 const verifyJsonHeader = async (contentType: string): Promise<boolean> => {
