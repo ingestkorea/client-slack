@@ -1,27 +1,27 @@
 import { IngestkoreaError } from "@ingestkorea/util-error-handler";
 import {
   SlackCommand,
-  ListScheduledMessageRequest,
-  ListScheduledMessageResult,
+  ListScheduledMessagesRequest,
+  ListScheduledMessagesResult,
   MetadataBearer,
   RequestSerializer,
   ResponseDeserializer,
 } from "../models";
 import { SlackClientResolvedConfig } from "../SlackClient";
-import { se_ListScheduledMessageCommand, de_ListScheduledMessageCommand } from "../protocols";
+import { se_ListScheduledMessagesCommand, de_ListScheduledMessagesCommand } from "../protocols";
 
-export interface ListScheduledMessageCommandInput extends ListScheduledMessageRequest {}
-export interface ListScheduledMessageCommandOutput extends MetadataBearer, ListScheduledMessageResult {}
+export interface ListScheduledMessagesCommandInput extends ListScheduledMessagesRequest {}
+export interface ListScheduledMessagesCommandOutput extends MetadataBearer, ListScheduledMessagesResult {}
 
-export class ListScheduledMessageCommand extends SlackCommand<
-  ListScheduledMessageCommandInput,
-  ListScheduledMessageCommandOutput,
+export class ListScheduledMessagesCommand extends SlackCommand<
+  ListScheduledMessagesCommandInput,
+  ListScheduledMessagesCommandOutput,
   SlackClientResolvedConfig
 > {
-  input: ListScheduledMessageCommandInput;
-  serializer: RequestSerializer<ListScheduledMessageCommandInput, SlackClientResolvedConfig>;
-  deserializer: ResponseDeserializer<ListScheduledMessageCommandOutput, SlackClientResolvedConfig>;
-  constructor(input: ListScheduledMessageCommandInput) {
+  input: ListScheduledMessagesCommandInput;
+  serializer: RequestSerializer<ListScheduledMessagesCommandInput, SlackClientResolvedConfig>;
+  deserializer: ResponseDeserializer<ListScheduledMessagesCommandOutput, SlackClientResolvedConfig>;
+  constructor(input: ListScheduledMessagesCommandInput) {
     super(input);
     const curr = new Date();
     const after_one_week_ms = curr.getTime() + getMsByDay(7);
@@ -35,8 +35,8 @@ export class ListScheduledMessageCommand extends SlackCommand<
       ...(input.cursor && { cursor: input.cursor }),
       ...(input.team_id && { team_id: input.team_id }),
     };
-    this.serializer = se_ListScheduledMessageCommand;
-    this.deserializer = de_ListScheduledMessageCommand;
+    this.serializer = se_ListScheduledMessagesCommand;
+    this.deserializer = de_ListScheduledMessagesCommand;
   }
 }
 

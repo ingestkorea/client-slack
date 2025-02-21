@@ -2,16 +2,16 @@ import { HttpRequest } from "@ingestkorea/util-http-handler";
 import {
   RequestSerializer,
   ResponseDeserializer,
-  ListScheduledMessageResult,
+  ListScheduledMessagesResult,
   ScheduledMessage,
   NextCursor,
 } from "../models";
 import { SlackClientResolvedConfig } from "../SlackClient";
 import { parseBody, parseErrorBody, deserializeMetadata, convertSecondsToUtcString } from "./constants";
-import { ListScheduledMessageCommandInput, ListScheduledMessageCommandOutput } from "../commands";
+import { ListScheduledMessagesCommandInput, ListScheduledMessagesCommandOutput } from "../commands";
 
-export const se_ListScheduledMessageCommand: RequestSerializer<
-  ListScheduledMessageCommandInput,
+export const se_ListScheduledMessagesCommand: RequestSerializer<
+  ListScheduledMessagesCommandInput,
   SlackClientResolvedConfig
 > = async (input, config) => {
   const hostname = "slack.com";
@@ -36,8 +36,8 @@ export const se_ListScheduledMessageCommand: RequestSerializer<
   });
 };
 
-export const de_ListScheduledMessageCommand: ResponseDeserializer<
-  ListScheduledMessageCommandOutput,
+export const de_ListScheduledMessagesCommand: ResponseDeserializer<
+  ListScheduledMessagesCommandOutput,
   SlackClientResolvedConfig
 > = async (response, config) => {
   if (response.statusCode > 300) await parseErrorBody(response);
@@ -45,7 +45,7 @@ export const de_ListScheduledMessageCommand: ResponseDeserializer<
   let data = await parseBody(response);
 
   let contents: any = {};
-  contents = de_ListScheduledMessageResult(data);
+  contents = de_ListScheduledMessagesResult(data);
 
   return {
     $metadata: deserializeMetadata(response),
@@ -53,7 +53,7 @@ export const de_ListScheduledMessageCommand: ResponseDeserializer<
   };
 };
 
-const de_ListScheduledMessageResult = (output: any): ListScheduledMessageResult => {
+const de_ListScheduledMessagesResult = (output: any): ListScheduledMessagesResult => {
   if (!output.ok) {
     return {
       ok: output.ok != null ? output.ok : undefined,

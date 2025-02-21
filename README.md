@@ -184,9 +184,9 @@ Usage info
 - `latest` or `oldest` params type must be in UTC string format, such as `2025-02-15T12:35:17Z` or `2025-02-15T12:35:17.456Z`.
 
 ```ts
-import { ListScheduledMessageCommand, ListScheduledMessageCommandInput } from "@ingestkorea/client-slack";
+import { ListScheduledMessagesCommand, ListScheduledMessagesCommandInput } from "@ingestkorea/client-slack";
 
-const params: ListScheduledMessageCommandInput = {
+const params: ListScheduledMessagesCommandInput = {
   channel: "YOUR_CHANNEL_ID", // optional // this channelId override SlackClient config
   cursor: "xxxxx", // optional
   oldest: "2025-02-20T12:35:17.456Z", // optional // default: current
@@ -195,7 +195,7 @@ const params: ListScheduledMessageCommandInput = {
   team_id: "xxxx", // optional
 };
 
-const command = new ListScheduledMessageCommand(params);
+const command = new ListScheduledMessagesCommand(params);
 ```
 
 #### Async/await

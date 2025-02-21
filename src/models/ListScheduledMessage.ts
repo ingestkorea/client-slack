@@ -1,4 +1,4 @@
-export interface ListScheduledMessageRequest {
+export interface ListScheduledMessagesRequest {
   channel?: string;
   cursor?: string;
   latest?: string; // seconds
@@ -7,7 +7,7 @@ export interface ListScheduledMessageRequest {
   team_id?: string;
 }
 
-export interface ListScheduledMessageResult {
+export interface ListScheduledMessagesResult {
   ok?: boolean;
   scheduled_messages?: ScheduledMessage[];
   response_metadata?: NextCursor;
