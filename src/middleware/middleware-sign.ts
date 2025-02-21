@@ -1,17 +1,19 @@
 import { createHmac } from "node:crypto";
 import { HttpRequest } from "@ingestkorea/util-http-handler";
-import { SlackClientResolvedConfig } from "../SlackClient";
-import { BuildMiddleware } from "../models";
+import { Middleware } from "../models";
 import { INGESTKOREA_REQUEST_TIMESTAMP, INGESTKOREA_SIGNATURE } from "./constatns";
 
-export const middlewareSign: BuildMiddleware = async (request: HttpRequest, config: SlackClientResolvedConfig) => {
-  const { secret } = config.credentials;
+export const middlewareSign: Middleware<any, any> = (next, context) => async (request) => {
+  const { secret } = context.credentials;
   const timestamp = getTimestamp().toString();
 
-  request.headers[INGESTKOREA_REQUEST_TIMESTAMP] = timestamp;
-  if (secret) request.headers[INGESTKOREA_SIGNATURE] = createSignature(request, secret);
+  request.headers = {
+    ...request.headers,
+    [INGESTKOREA_REQUEST_TIMESTAMP]: timestamp,
+    ...(secret && { [INGESTKOREA_SIGNATURE]: createSignature(request, secret) }),
+  };
 
-  return request;
+  return next(request);
 };
 
 const createSignature = (request: HttpRequest, secret: string): string => {

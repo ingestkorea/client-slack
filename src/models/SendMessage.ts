@@ -1,25 +1,25 @@
-export interface SendMessageInput extends MessagePayload {
+export interface SendMessageRequest extends MessagePayloadForInteraction {
   channel?: string;
-}
-
-export interface MessagePayload {
   text: string;
-  blocks?: (SectionBlock | DividerBlock | HeaderBlock)[];
+  blocks?: SupportBlock[];
   thread_ts?: string;
   mrkdwn?: boolean; // default true
-  response_url?: string;
-  response_type?: "in_channel";
-  replace_original?: boolean;
-  delete_original?: boolean;
 }
 
-export interface SendMessageOutput {
-  ok?: boolean; // all http response code is 200
+export interface MessagePayloadForInteraction {
+  response_url?: string;
+  response_type?: "in_channel";
+  replace_original?: boolean; // default true
+  delete_original?: boolean; // default true
+}
+
+export interface SendMessageResult {
+  ok?: boolean;
   channel?: string;
-  ts?: string;
   message?: ReceiveMessage;
-  error?: string; // if error
-  errors?: string[]; // if error
+  ts?: string;
+  error?: string;
+  errors?: string[];
 }
 
 export type ReceiveMessage = {
@@ -31,7 +31,7 @@ export type ReceiveMessage = {
   text?: string;
   team?: string;
   bot_profile?: BotFrofile;
-  blocks?: (Partial<SectionBlock> | Partial<DividerBlock> | Partial<HeaderBlock>)[];
+  blocks?: SupportBlock[];
 };
 
 export interface BotFrofile {
@@ -46,10 +46,10 @@ export interface BotFrofile {
 
 export interface SectionBlock {
   type: "section";
-  text?: PlainText | Markdown;
-  fields?: (PlainText | Markdown)[]; // 2000
+  text?: SupportTextType;
   block_id?: string;
-  accessory?: ButtonElement; // https://api.slack.com/reference/block-kit/blocks#section
+  fields?: SupportTextType[]; // 2000
+  accessory?: SupportElement; // https://api.slack.com/reference/block-kit/blocks#section
   // expand?: boolean;
 }
 
@@ -64,17 +64,22 @@ export interface HeaderBlock {
   block_id?: string;
 }
 
-export type PlainText = {
+export type SupportBlock = SectionBlock | DividerBlock | HeaderBlock;
+export type SupportTextType = PlainText | Markdown;
+export type SupportElement = ButtonElement;
+
+export type PlainText = CommonText & {
   type: "plain_text";
-  text: string; // 3000
   emoji?: boolean;
-  verbatim?: boolean; // default false
 };
 
-export type Markdown = {
+export type Markdown = CommonText & {
   type: "mrkdwn";
-  text: string; // 3000
-  verbatim?: boolean;
+};
+
+type CommonText = {
+  text: string; // max 3000
+  verbatim?: boolean; //default false
 };
 
 export type Icons = {
@@ -86,10 +91,10 @@ export type Icons = {
 export type ButtonElement = {
   type: "button";
   text: PlainText;
-  action_id?: string;
-  url?: string;
   value?: string;
   style?: "primary" | "danger";
+  action_id?: string;
+  url?: string;
   confirm?: Confirmation;
 };
 
@@ -99,5 +104,4 @@ export type Confirmation = {
   confirm: PlainText;
   deny: PlainText;
   style?: "primary" | "danger";
-  accessibility_label?: string;
 };

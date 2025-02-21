@@ -1,14 +1,6 @@
-import { HttpRequest, HttpResponse, NodeHttpHandler } from "@ingestkorea/util-http-handler";
-import { SlackClientResolvedConfig } from "../SlackClient";
-import { MetadataBearer } from "./MetadataBearer";
+export type Middleware<Input extends object, Output extends object> = (
+  next: Handler<Input, Output>,
+  context: any
+) => Handler<Input, Output>;
 
-export interface BuildMiddleware {
-  (request: HttpRequest, config: SlackClientResolvedConfig): Promise<HttpRequest>;
-}
-
-export interface DeserializeMiddleware {
-  (request: HttpRequest, config: SlackClientResolvedConfig, handler: NodeHttpHandler): Promise<{
-    response: HttpResponse;
-    output: MetadataBearer;
-  }>;
-}
+export type Handler<Input extends object, Output extends object> = (args: Input) => Promise<Output>;

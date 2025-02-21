@@ -1,26 +1,24 @@
-import { HttpRequest, HttpResponse } from "@ingestkorea/util-http-handler";
-import { IngestkoreaError } from "@ingestkorea/util-error-handler";
+import { HttpRequest } from "@ingestkorea/util-http-handler";
 import {
-  SendMessageOutput,
+  RequestSerializer,
+  ResponseDeserializer,
+  SendMessageResult,
   ReceiveMessage,
   BotFrofile,
   Icons,
-  SectionBlock,
-  DividerBlock,
-  HeaderBlock,
-  PlainText,
-  Markdown,
-  MetadataBearer,
-  ResponseMetadata,
+  SupportBlock,
+  SupportTextType,
+  Confirmation,
+  SupportElement,
 } from "../models";
 import { SlackClientResolvedConfig } from "../SlackClient";
-import { parseBody, parseErrorBody } from "./constants";
+import { parseBody, parseErrorBody, deserializeMetadata } from "./constants";
 import { SendMessageCommandInput, SendMessageCommandOutput } from "../commands";
 
-export const serializeIngestkorea_restJson_SendMessageCommand = async (
-  input: SendMessageCommandInput,
-  config: SlackClientResolvedConfig
-): Promise<HttpRequest> => {
+export const se_SendMessageCommand: RequestSerializer<SendMessageCommandInput, SlackClientResolvedConfig> = async (
+  input,
+  config
+) => {
   const url = input.response_url ? new URL(input.response_url) : new URL("https://slack.com/api/chat.postMessage");
   const hostname = url.hostname;
   const path = url.pathname;
@@ -48,53 +46,40 @@ export const serializeIngestkorea_restJson_SendMessageCommand = async (
   });
 };
 
-export const deserializeMetadata = (response: HttpResponse): ResponseMetadata => {
-  return {
-    httpStatusCode: response.statusCode,
-  };
-};
+export const de_SendMessageCommand: ResponseDeserializer<SendMessageCommandOutput, SlackClientResolvedConfig> = async (
+  response,
+  config
+) => {
+  if (response.statusCode > 300) await parseErrorBody(response);
 
-export const deserializeIngestkorea_restJson_SendMessageCommand = async (response: {
-  response: HttpResponse;
-  output: MetadataBearer;
-}): Promise<SendMessageCommandOutput> => {
-  const { response: httpResponse, output } = response;
-  if (httpResponse.statusCode > 300) await parseErrorBody(httpResponse);
+  let data = await parseBody(response);
 
-  const data: any = await parseBody(httpResponse);
   let contents: any = {};
-  contents = deserializeIngestkorea_restJson_SendMessageOutput(data);
+  contents = de_SendMessageResult(data);
 
   return {
-    $metadata: {
-      ...deserializeMetadata(httpResponse),
-      ...output.$metadata,
-    },
+    $metadata: deserializeMetadata(response),
     ...contents,
   };
 };
 
-export const deserializeIngestkorea_restJson_SendMessageOutput = (output: any): SendMessageOutput => {
-  let response = {
+export const de_SendMessageResult = (output: any): SendMessageResult => {
+  if (!output.ok) {
+    return {
+      ok: output.ok != null ? output.ok : undefined,
+      ...(output.error && { error: output.error }),
+      ...(output.errors && { errors: output.errors.filter((e: any) => e != null) }),
+    };
+  }
+  return {
     ok: output.ok != null ? output.ok : undefined,
     channel: output.channel ? output.channel : undefined,
-    ts: output.ts ? output.ts : undefined,
-    message: output.message ? deserializeIngestkorea_restJson_ReceiveMessage(output.message) : undefined,
-    error: output.error ? output.error : undefined,
-    errors: output.errors ? output.errors : undefined,
+    message: output.message ? de_ReceiveMessage(output.message) : undefined,
+    ...(output.ts && { ts: output.ts }),
   };
-  if (!response.ok)
-    throw new IngestkoreaError({
-      code: 400,
-      type: "Bad Request",
-      message: "Invalid Request",
-      ...(response.error && { description: response.error }),
-      ...(response.error && response.errors && { description: `[${response.error}]: ${response.errors.join(", ")}` }),
-    });
-  return response;
 };
 
-export const deserializeIngestkorea_restJson_ReceiveMessage = (output: any): ReceiveMessage => {
+const de_ReceiveMessage = (output: any): ReceiveMessage => {
   return {
     user: output.user ? output.user : undefined,
     type: output.type ? output.type : undefined,
@@ -103,24 +88,24 @@ export const deserializeIngestkorea_restJson_ReceiveMessage = (output: any): Rec
     app_id: output.app_id ? output.app_id : undefined,
     text: output.text ? output.text : undefined,
     team: output.team ? output.team : undefined,
-    bot_profile: output.bot_profile ? deserializeIngestkorea_restJson_BotFrofile(output.bot_profile) : undefined,
-    blocks: output.blocks ? deserializeIngestkorea_restJson_Blocks(output.blocks) : undefined,
+    bot_profile: output.bot_profile ? de_BotFrofile(output.bot_profile) : undefined,
+    blocks: output.blocks ? de_BlockList(output.blocks) : undefined,
   };
 };
 
-export const deserializeIngestkorea_restJson_BotFrofile = (output: any): BotFrofile => {
+const de_BotFrofile = (output: any): BotFrofile => {
   return {
     id: output.id ? output.id : undefined,
     app_id: output.app_id ? output.app_id : undefined,
     name: output.name ? output.name : undefined,
-    icons: output.icons ? deserializeIngestkorea_restJson_Icons(output.icons) : undefined,
+    icons: output.icons ? de_Icons(output.icons) : undefined,
     deleted: output.deleted != null ? output.deleted : undefined,
     updated: output.updated ? output.updated : undefined,
     team_id: output.team_id ? output.team_id : undefined,
   };
 };
 
-export const deserializeIngestkorea_restJson_Icons = (output: any): Icons => {
+const de_Icons = (output: any): Icons => {
   return {
     image_36: output.image_36 ? output.image_36 : undefined,
     image_48: output.image_48 ? output.image_48 : undefined,
@@ -128,25 +113,53 @@ export const deserializeIngestkorea_restJson_Icons = (output: any): Icons => {
   };
 };
 
-export const deserializeIngestkorea_restJson_Blocks = (
-  output: any[]
-): (Partial<SectionBlock> | Partial<DividerBlock> | Partial<HeaderBlock>)[] => {
-  let result = output.map((block) => {
-    return {
-      type: block.type ? block.type : undefined,
-      block_id: block.block_id ? block.block_id : undefined,
-      text: block.text ? parseTextorMarkdown(block.text) : undefined,
-      fields: block.fields ? block.fields.map(parseTextorMarkdown) : undefined,
-    };
-  });
+const de_BlockList = (output: any[]): SupportBlock[] => {
+  const result = (output || []).filter((e) => e != null).map((entry) => de_Block(entry));
   return result;
 };
 
-const parseTextorMarkdown = (output: any): PlainText | Markdown => {
+const de_Block = (output: any): SupportBlock => {
+  return {
+    type: output.type ? output.type : undefined,
+    block_id: output.block_id ? output.block_id : undefined,
+    ...(output.text && { text: parseTextOrMarkdown(output.text) }),
+    ...(output.fields && { fields: de_FieldList(output.fields) }),
+    ...(output.accessory && { accessory: de_Accessory(output.accessory) }),
+  };
+};
+
+const de_Accessory = (output: any): SupportElement => {
+  return {
+    type: output.type ? output.type : undefined,
+    text: output.text ? parseTextOrMarkdown(output.text) : undefined,
+    value: output.value ? output.value : undefined,
+    style: output.style ? output.style : undefined,
+    action_id: output.action_id ? output.action_id : undefined,
+    url: output.url ? output.url : undefined,
+    confirm: output.confirm ? de_Confirmation(output.confirm) : undefined,
+  } as any;
+};
+
+const de_FieldList = (output: any[]): SupportTextType[] => {
+  const result: SupportTextType[] = (output || []).filter((e) => e != null).map((entry) => parseTextOrMarkdown(entry));
+  return result;
+};
+
+const de_Confirmation = (output: any): Confirmation => {
+  return {
+    title: output.title ? parseTextOrMarkdown(output.title) : undefined,
+    text: output.text ? parseTextOrMarkdown(output.text) : undefined,
+    confirm: output.confirm ? parseTextOrMarkdown(output.confirm) : undefined,
+    deny: output.title ? parseTextOrMarkdown(output.deny) : undefined,
+    style: output.style ? output.style : undefined,
+  } as any;
+};
+
+const parseTextOrMarkdown = (output: any): SupportTextType => {
   return {
     type: output.type ? output.type : undefined,
     text: output.text ? output.text : undefined,
-    emoji: output.emoji != null ? output.emoji : undefined,
-    verbatim: output.verbatim != null ? output.verbatim : undefined,
+    ...(output.verbatim && { verbatim: output.verbatim }),
+    ...(output.emoji && { emoji: output.emoji }),
   };
 };

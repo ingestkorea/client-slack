@@ -1,5 +1,20 @@
 import { IngestkoreaError, ingestkoreaErrorCodeChecker } from "@ingestkorea/util-error-handler";
 import { HttpResponse, collectBodyString, destroyStream } from "@ingestkorea/util-http-handler";
+import { ResponseMetadata } from "../models";
+
+export const deserializeMetadata = (response: HttpResponse): ResponseMetadata => {
+  return {
+    httpStatusCode: response.statusCode,
+  };
+};
+
+export const convertSecondsToUtcString = (input: any): string => {
+  if (typeof input == "number") return getUtcString(input * 1000);
+  if (typeof input == "string") return getUtcString(Number(input) * 1000);
+  return input;
+};
+
+const getUtcString = (input: number) => new Date(input).toISOString().replace(/\.\d{3}Z$/, "Z");
 
 export const parseBody = async (output: HttpResponse): Promise<any> => {
   const { statusCode, headers, body: streamBody } = output;
@@ -18,7 +33,7 @@ export const parseBody = async (output: HttpResponse): Promise<any> => {
       code: ingestkoreaErrorCodeChecker(statusCode) ? statusCode : 400,
       type: "Bad Request",
       message: "Invalid Request",
-      description: "content-type is not application/json",
+      description: "response content-type is not application/json",
     });
     throw lastError;
   }
@@ -33,7 +48,7 @@ export const parseErrorBody = async (output: HttpResponse): Promise<void> => {
   let isValid = await verifyJsonHeader(headers["content-type"]);
   let data = await collectBodyString(streamBody);
 
-  if (data == "used_url" || data == "expired_url") {
+  if (data == "used_url" || data == "expired_url" || data == "invalid_url") {
     data = JSON.stringify({ ok: false, error: data });
     isValid = true;
   }

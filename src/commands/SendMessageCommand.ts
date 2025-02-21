@@ -1,14 +1,16 @@
-import { HttpRequest, HttpResponse } from "@ingestkorea/util-http-handler";
-import { IngestkoreaError } from "@ingestkorea/util-error-handler";
-import { SlackCommand, SendMessageInput, SendMessageOutput, MetadataBearer } from "../models";
-import { SlackClientResolvedConfig } from "../SlackClient";
 import {
-  serializeIngestkorea_restJson_SendMessageCommand,
-  deserializeIngestkorea_restJson_SendMessageCommand,
-} from "../protocols/SendMessage";
+  SlackCommand,
+  SendMessageRequest,
+  SendMessageResult,
+  MetadataBearer,
+  RequestSerializer,
+  ResponseDeserializer,
+} from "../models";
+import { SlackClientResolvedConfig } from "../SlackClient";
+import { se_SendMessageCommand, de_SendMessageCommand } from "../protocols";
 
-export interface SendMessageCommandInput extends SendMessageInput {}
-export interface SendMessageCommandOutput extends SendMessageOutput, MetadataBearer {}
+export interface SendMessageCommandInput extends SendMessageRequest {}
+export interface SendMessageCommandOutput extends MetadataBearer, SendMessageResult {}
 
 export class SendMessageCommand extends SlackCommand<
   SendMessageCommandInput,
@@ -16,11 +18,12 @@ export class SendMessageCommand extends SlackCommand<
   SlackClientResolvedConfig
 > {
   input: SendMessageCommandInput;
+  serializer: RequestSerializer<SendMessageCommandInput, SlackClientResolvedConfig>;
+  deserializer: ResponseDeserializer<SendMessageCommandOutput, SlackClientResolvedConfig>;
   constructor(input: SendMessageCommandInput) {
     super(input);
     let invalidBlocks = !input.blocks || !input.blocks.length;
     this.input = {
-      ...input,
       text: input.text,
       ...(input.channel && { channel: input.channel }),
       ...(input.blocks && { blocks: input.blocks }),
@@ -34,20 +37,7 @@ export class SendMessageCommand extends SlackCommand<
         delete_original: input.delete_original != null ? input.delete_original : false,
       }),
     };
-  }
-  async serialize(input: SendMessageCommandInput, config: SlackClientResolvedConfig): Promise<HttpRequest> {
-    if (!config.credentials.token)
-      throw new IngestkoreaError({
-        code: 400,
-        type: "Bad Request",
-        message: "Invalid Params",
-        description: "Please Check Slack API Token",
-      });
-    let request = await serializeIngestkorea_restJson_SendMessageCommand(input, config);
-    return request;
-  }
-  async deserialize(response: { response: HttpResponse; output: MetadataBearer }): Promise<SendMessageCommandOutput> {
-    let output = await deserializeIngestkorea_restJson_SendMessageCommand(response);
-    return output;
+    this.serializer = se_SendMessageCommand;
+    this.deserializer = de_SendMessageCommand;
   }
 }
