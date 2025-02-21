@@ -189,8 +189,8 @@ import { ListScheduledMessageCommand, ListScheduledMessageCommandInput } from "@
 const params: ListScheduledMessageCommandInput = {
   channel: "YOUR_CHANNEL_ID", // optional // this channelId override SlackClient config
   cursor: "xxxxx", // optional
-  latest: "2025-02-20T12:35:17.456Z", // optional // default: current
-  oldest: "2025-02-27T12:35:17.456Z", // optional // default: current + 7 days
+  oldest: "2025-02-20T12:35:17.456Z", // optional // default: current
+  latest: "2025-02-27T12:35:17.456Z", // optional // default: current + 7 days
   limit: 1 ~ 100, // optional // default: 20 // max: 100
   team_id: "xxxx", // optional
 };
