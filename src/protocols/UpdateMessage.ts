@@ -1,24 +1,24 @@
 import { HttpRequest } from "@ingestkorea/util-http-handler";
-import { RequestSerializer, ResponseDeserializer, SendScheduleMessageResult } from "../models";
+import { RequestSerializer, ResponseDeserializer, UpdateMessageResult, UpdatedMessage, EditedInfo } from "../models";
 import { SlackClientResolvedConfig } from "../SlackClient";
-import { parseBody, parseErrorBody, deserializeMetadata, convertSecondsToUtcString } from "./constants";
-import { SendScheduleMessageCommandInput, SendScheduleMessageCommandOutput } from "../commands";
+import { UpdateMessageCommandInput, UpdateMessageCommandOutput } from "../commands";
+import { parseBody, parseErrorBody, deserializeMetadata } from "./constants";
 import { de_ReceiveMessage } from "./SendMessage";
 
-export const se_SendScheduleMessageCommand: RequestSerializer<
-  SendScheduleMessageCommandInput,
-  SlackClientResolvedConfig
-> = async (input, config) => {
+export const se_UpdateMessageCommand: RequestSerializer<UpdateMessageCommandInput, SlackClientResolvedConfig> = async (
+  input,
+  config
+) => {
   const hostname = "slack.com";
-  const path = "/api/chat.scheduleMessage";
+  const path = "/api/chat.update";
   const headers = {
     host: hostname,
     "content-type": "application/json; charset=utf-8",
   };
   const body = JSON.stringify({
     channel: input.channel ? input.channel : config.credentials.channel,
+    ts: input.ts,
     text: input.text,
-    post_at: Math.round(new Date(input.post_at).getTime() / 1000),
     ...(input.blocks && { blocks: input.blocks }),
   });
   return new HttpRequest({
@@ -31,8 +31,8 @@ export const se_SendScheduleMessageCommand: RequestSerializer<
   });
 };
 
-export const de_SendScheduleMessageCommand: ResponseDeserializer<
-  SendScheduleMessageCommandOutput,
+export const de_UpdateMessageCommand: ResponseDeserializer<
+  UpdateMessageCommandOutput,
   SlackClientResolvedConfig
 > = async (response, config) => {
   if (response.statusCode > 300) await parseErrorBody(response);
@@ -40,7 +40,7 @@ export const de_SendScheduleMessageCommand: ResponseDeserializer<
   let data = await parseBody(response);
 
   let contents: any = {};
-  contents = de_SendScheduleMessageResult(data);
+  contents = de_UpdateMessageResult(data);
 
   return {
     $metadata: deserializeMetadata(response),
@@ -48,7 +48,7 @@ export const de_SendScheduleMessageCommand: ResponseDeserializer<
   };
 };
 
-const de_SendScheduleMessageResult = (output: any): SendScheduleMessageResult => {
+const de_UpdateMessageResult = (output: any): UpdateMessageResult => {
   if (!output.ok) {
     return {
       ok: output.ok != null ? output.ok : undefined,
@@ -59,9 +59,23 @@ const de_SendScheduleMessageResult = (output: any): SendScheduleMessageResult =>
   return {
     ok: output.ok != null ? output.ok : undefined,
     channel: output.channel ? output.channel : undefined,
-    message: output.message ? de_ReceiveMessage(output.message) : undefined,
-    scheduled_message_id: output.scheduled_message_id ? output.scheduled_message_id : undefined,
-    post_at: output.post_at ? output.post_at : undefined,
-    post_at_utc: output.post_at ? convertSecondsToUtcString(output.post_at) : undefined,
+    ts: output.ts ? output.ts : undefined,
+    text: output.text ? output.text : undefined,
+    message: output.message ? de_UpdatedMessage(output.message) : undefined,
+  };
+};
+
+const de_UpdatedMessage = (output: any): UpdatedMessage => {
+  const result = de_ReceiveMessage(output);
+  return {
+    edited: output.edited ? de_EditedInfo(output.edited) : undefined,
+    ...result,
+  };
+};
+
+const de_EditedInfo = (output: any): EditedInfo => {
+  return {
+    user: output.user ? output.user : undefined,
+    ts: output.ts ? output.ts : undefined,
   };
 };

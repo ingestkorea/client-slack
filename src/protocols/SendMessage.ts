@@ -74,12 +74,12 @@ export const de_SendMessageResult = (output: any): SendMessageResult => {
   return {
     ok: output.ok != null ? output.ok : undefined,
     channel: output.channel ? output.channel : undefined,
+    ts: output.ts ? output.ts : undefined,
     message: output.message ? de_ReceiveMessage(output.message) : undefined,
-    ...(output.ts && { ts: output.ts }),
   };
 };
 
-const de_ReceiveMessage = (output: any): ReceiveMessage => {
+export const de_ReceiveMessage = (output: any): ReceiveMessage => {
   return {
     user: output.user ? output.user : undefined,
     type: output.type ? output.type : undefined,

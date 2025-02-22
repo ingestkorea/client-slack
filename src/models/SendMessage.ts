@@ -16,15 +16,15 @@ export interface MessagePayloadForInteraction {
 export interface SendMessageResult {
   ok?: boolean;
   channel?: string;
-  message?: ReceiveMessage;
   ts?: string;
+  message?: ReceiveMessage;
   error?: string;
   errors?: string[];
 }
 
 export type ReceiveMessage = {
   user?: string;
-  type?: "message";
+  type?: string;
   ts?: string;
   bot_id?: string;
   app_id?: string;

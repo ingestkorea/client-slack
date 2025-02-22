@@ -44,9 +44,10 @@ Node.js
 
 - SendMessage
 - DeleteMessage
+- UpdateMessage
 - SendScheduleMessage
 - DeleteScheduledMessage
-- ListScheduledMessage
+- ListScheduledMessages
 
 ### Import
 
@@ -139,6 +140,21 @@ const params: DeleteMessageCommandInput = {
 const command = new DeleteMessageCommand(params);
 ```
 
+#### UpdateMessage
+
+```ts
+import { UpdateMessageCommand, UpdateMessageCommandInput } from "@ingestkorea/client-slack";
+
+const params: UpdateMessageCommandInput = {
+  ts: "xxxxx", // required
+  text: "xxxx", // required
+  channel: "YOUR_CHANNEL_ID", // optional // this channelId override SlackClient config
+  blocks: SupportBlock[] // optional
+};
+
+const command = new UpdateMessageCommand(params);
+```
+
 #### SendScheduleMessage
 
 Usage info
@@ -177,7 +193,7 @@ const params: DeleteScheduledMessageCommandInput = {
 const command = new DeleteScheduledMessageCommand(params);
 ```
 
-#### ListScheduledMessage
+#### ListScheduledMessages
 
 Usage info
 
