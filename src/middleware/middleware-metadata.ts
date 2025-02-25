@@ -6,7 +6,7 @@ export const middlewareIngestkoreaMetadata: Middleware<any, any> = (next, contex
   request.headers = {
     ...request.headers,
     [INGESTKOREA_DATE]: longDate,
-    [INGESTKOREA_USER_AGENT]: "@ingestkorea/client-slack/1.0.x",
+    [INGESTKOREA_USER_AGENT]: "@ingestkorea/client-slack/1.1.x",
   };
   return next(request);
 };

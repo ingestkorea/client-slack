@@ -1,18 +1,18 @@
+import { SlackErrorInfo } from "./SlackErrorInfo";
+
 export interface ListScheduledMessagesRequest {
+  oldest?: string; // UTC string
+  latest?: string; // UTC string
+  limit?: number;
   channel?: string;
   cursor?: string;
-  latest?: string; // seconds
-  oldest?: string; // seconds
-  limit?: number;
   team_id?: string;
 }
 
-export interface ListScheduledMessagesResult {
+export interface ListScheduledMessagesResult extends SlackErrorInfo {
   ok?: boolean;
   scheduled_messages?: ScheduledMessage[];
   response_metadata?: NextCursor;
-  error?: string;
-  errors?: string[];
 }
 
 export type ScheduledMessage = ScheduledMessageDefault & ScheduledMessageCustom;
@@ -20,14 +20,14 @@ export type ScheduledMessage = ScheduledMessageDefault & ScheduledMessageCustom;
 export type ScheduledMessageDefault = {
   id?: number;
   channel_id?: string;
-  post_at?: number;
   date_created?: number;
+  post_at?: number;
   text?: string;
 };
 
 export type ScheduledMessageCustom = {
-  post_at_utc?: string;
   date_created_utc?: string;
+  post_at_utc?: string;
 };
 
 export type NextCursor = {

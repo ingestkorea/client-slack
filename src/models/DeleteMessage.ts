@@ -1,12 +1,12 @@
+import { SlackErrorInfo } from "./SlackErrorInfo";
+
 export interface DeleteMessageRequest {
-  channel?: string;
   ts: string;
+  channel?: string;
 }
 
-export interface DeleteMessageResult {
+export interface DeleteMessageResult extends SlackErrorInfo {
   ok?: boolean;
   channel?: string;
   ts?: string;
-  error?: string;
-  errors?: string[];
 }

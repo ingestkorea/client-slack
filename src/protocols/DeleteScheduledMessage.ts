@@ -1,7 +1,7 @@
 import { HttpRequest } from "@ingestkorea/util-http-handler";
 import { RequestSerializer, ResponseDeserializer, DeleteScheduledMessageResult } from "../models";
 import { SlackClientResolvedConfig } from "../SlackClient";
-import { parseBody, parseErrorBody, deserializeMetadata } from "./constants";
+import { parseBody, parseErrorBody, deserializeMetadata, deserializeSlackErrorInfo } from "./constants";
 import { DeleteScheduledMessageCommandInput, DeleteScheduledMessageCommandOutput } from "../commands";
 
 export const se_DeleteScheduledMessageCommand: RequestSerializer<
@@ -15,8 +15,8 @@ export const se_DeleteScheduledMessageCommand: RequestSerializer<
     "content-type": "application/json; charset=utf-8",
   };
   const body = JSON.stringify({
-    channel: input.channel ? input.channel : config.credentials.channel,
     scheduled_message_id: input.scheduled_message_id,
+    channel: input.channel ? input.channel : config.credentials.channel,
   });
   return new HttpRequest({
     protocol: "https:",
@@ -47,12 +47,12 @@ export const de_DeleteScheduledMessageCommand: ResponseDeserializer<
 
 const de_DeleteScheduledMessageResult = (output: any): DeleteScheduledMessageResult => {
   if (!output.ok) {
-    let cMsg =
-      "invalid_scheduled_message_id error: Scheduled messages that have already been posted to Slack or that will be posted to Slack within 60 seconds of the delete request";
+    const cMsg =
+      "invalid_scheduled_message_id: Scheduled messages that have already been posted to Slack or that will be posted to Slack within 60 seconds of the delete request";
+    const result = deserializeSlackErrorInfo(output);
     return {
-      ok: output.ok != null ? output.ok : undefined,
-      ...(output.error && output.error == "invalid_scheduled_message_id" ? { error: cMsg } : { error: output.error }),
-      ...(output.errors && { errors: output.errors.filter((e: any) => e != null) }),
+      ...result,
+      error: cMsg,
     };
   }
   return {

@@ -1,20 +1,18 @@
-import { SupportBlock, ReceiveMessage } from "./SendMessage";
+import { SupportBlock, ReceiveMessage, SlackErrorInfo } from "./";
 
 export interface UpdateMessageRequest {
-  channel?: string;
   ts: string;
   text: string;
+  channel?: string;
   blocks?: SupportBlock[];
 }
 
-export interface UpdateMessageResult {
+export interface UpdateMessageResult extends SlackErrorInfo {
   ok?: boolean;
   channel?: string;
   ts?: string;
   text?: string;
   message?: UpdatedMessage;
-  error?: string;
-  errors?: string[];
 }
 
 export type UpdatedMessage = ReceiveMessage & { edited?: EditedInfo };

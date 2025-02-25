@@ -2,7 +2,7 @@ import { HttpRequest } from "@ingestkorea/util-http-handler";
 import { RequestSerializer, ResponseDeserializer, UpdateMessageResult, UpdatedMessage, EditedInfo } from "../models";
 import { SlackClientResolvedConfig } from "../SlackClient";
 import { UpdateMessageCommandInput, UpdateMessageCommandOutput } from "../commands";
-import { parseBody, parseErrorBody, deserializeMetadata } from "./constants";
+import { parseBody, parseErrorBody, deserializeMetadata, deserializeSlackErrorInfo } from "./constants";
 import { de_ReceiveMessage } from "./SendMessage";
 
 export const se_UpdateMessageCommand: RequestSerializer<UpdateMessageCommandInput, SlackClientResolvedConfig> = async (
@@ -16,9 +16,9 @@ export const se_UpdateMessageCommand: RequestSerializer<UpdateMessageCommandInpu
     "content-type": "application/json; charset=utf-8",
   };
   const body = JSON.stringify({
-    channel: input.channel ? input.channel : config.credentials.channel,
     ts: input.ts,
     text: input.text,
+    channel: input.channel ? input.channel : config.credentials.channel,
     ...(input.blocks && { blocks: input.blocks }),
   });
   return new HttpRequest({
@@ -49,13 +49,7 @@ export const de_UpdateMessageCommand: ResponseDeserializer<
 };
 
 const de_UpdateMessageResult = (output: any): UpdateMessageResult => {
-  if (!output.ok) {
-    return {
-      ok: output.ok != null ? output.ok : undefined,
-      ...(output.error && { error: output.error }),
-      ...(output.errors && { errors: output.errors.filter((e: any) => e != null) }),
-    };
-  }
+  if (!output.ok) return deserializeSlackErrorInfo(output);
   return {
     ok: output.ok != null ? output.ok : undefined,
     channel: output.channel ? output.channel : undefined,

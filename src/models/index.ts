@@ -1,4 +1,5 @@
 export * from "./SlackCommand";
+export * from "./SlackErrorInfo";
 export * from "./SendMessage";
 export * from "./DeleteMessage";
 export * from "./UpdateMessage";

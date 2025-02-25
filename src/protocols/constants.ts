@@ -1,6 +1,6 @@
 import { IngestkoreaError, ingestkoreaErrorCodeChecker } from "@ingestkorea/util-error-handler";
 import { HttpResponse, collectBodyString, destroyStream } from "@ingestkorea/util-http-handler";
-import { ResponseMetadata } from "../models";
+import { ResponseMetadata, SlackErrorInfo } from "../models";
 
 export const deserializeMetadata = (response: HttpResponse): ResponseMetadata => {
   return {
@@ -8,13 +8,21 @@ export const deserializeMetadata = (response: HttpResponse): ResponseMetadata =>
   };
 };
 
+export const deserializeSlackErrorInfo = (output: any): SlackErrorInfo => {
+  return {
+    ok: output.ok != null ? output.ok : undefined,
+    ...(output.error && { error: output.error }),
+    ...(output.errors && { errors: output.errors.filter((e: any) => e != null) }),
+  };
+};
+
 export const convertSecondsToUtcString = (input: any): string => {
-  if (typeof input == "number") return getUtcString(input * 1000);
-  if (typeof input == "string") return getUtcString(Number(input) * 1000);
+  if (typeof input == "number") return convertISO8601(input * 1000);
+  if (typeof input == "string") return convertISO8601(Number(input) * 1000);
   return input;
 };
 
-const getUtcString = (input: number) => new Date(input).toISOString().replace(/\.\d{3}Z$/, "Z");
+const convertISO8601 = (input: number) => new Date(input).toISOString().replace(/\.\d{3}Z$/, "Z");
 
 export const parseBody = async (output: HttpResponse): Promise<any> => {
   const { statusCode, headers, body: streamBody } = output;

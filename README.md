@@ -6,9 +6,9 @@
 
 ## Description
 
-INGESTKOREA SDK Slack Client for Node.js.
+INGESTKOREA SDK - Slack Client for Node.js.
 
-INGESTKOREA SDK Slack Client for Node.js is a lightweight library that includes only the essential features commonly used in Slack bots.
+INGESTKOREA SDK - Slack Client for Node.js is a lightweight library that contains only the essential features frequently used in Slack bots.
 
 This SDK performs tasks such as the following automatically.
 
@@ -28,8 +28,10 @@ npm install @ingestkorea/client-slack
 
 [Slack](https://api.slack.com/apps)
 
-- Install the app in your workspace and generate a `Bot User OAuth Token` under the `OAuth & Permissions` category.
-- Add the `chat:write` scope to the Bot Token Scopes.
+- Create the app in your workspace.
+- Add the `chat:write` scope to the `Bot Token Scopes` under the `OAuth & Permissions` category.
+- Generate a `OAuth Token` under the `OAuth & Permissions` category. (A token is automatically generated when you installed the app to your workspace)
+- Enter `/invite @YOUR_APP_NAME` in the channel where you want to add the bot.
 
 Node.js
 
@@ -51,7 +53,9 @@ Node.js
 
 ### Import
 
-The INGESTKOREA SDK Slack is modulized by `client` and `commands`. To send a request, you only need to import the SlackClient and the commands you need, for example SendMessageCommand:
+The INGESTKOREA SDK - Slack Client is modulized by `client` and `commands`.
+
+To send a request, you only need to import the SlackClient and the commands you need, for example SendMessageCommand:
 
 ```ts
 import { SlackClient, SendMessageCommand } from "@ingestkorea/client-slack";
@@ -78,7 +82,7 @@ const client = new SlackClient({
 
 const params: SendMessageCommandInput = {
   text: "Hello client-slack : " + new Date().toISOString(), // required
-  channel: "YOUR_CHANNEL_ID", // optional // this channelId override SlackClient config
+  channel: "YOUR_CHANNEL_ID", // optional // this channelId overrides SlackClient config
 };
 
 const command = new SendMessageCommand(params);
@@ -98,7 +102,7 @@ If you need more information about Blocks, please visit [Slack Blocks Reference]
 import { SendMessageCommand, SendMessageCommandInput } from "@ingestkorea/client-slack";
 
 const params: SendMessageCommandInput = {
-  text: "hello client-slack : " + new Date().toISOString(),
+  text: "Hello client-slack : " + new Date().toISOString(),
   blocks: [
     { type: "header", text: { type: "plain_text", text: "This is HeaderBlock" } },
     { type: "divider" },
@@ -129,12 +133,13 @@ const command = new SendMessageCommand(params);
 
 #### DeleteMessage
 
+- If you provide the channel ID as an input to the command object, it will override the SlackClient configuration.
+
 ```ts
 import { DeleteMessageCommand, DeleteMessageCommandInput } from "@ingestkorea/client-slack";
 
 const params: DeleteMessageCommandInput = {
   ts: "1234567890.123456", // required
-  channel: "YOUR_CHANNEL_ID", // optional // this channelId override SlackClient config
 };
 
 const command = new DeleteMessageCommand(params);
@@ -142,14 +147,14 @@ const command = new DeleteMessageCommand(params);
 
 #### UpdateMessage
 
+- If you provide the channel ID as an input to the command object, it will override the SlackClient configuration.
+
 ```ts
 import { UpdateMessageCommand, UpdateMessageCommandInput } from "@ingestkorea/client-slack";
 
 const params: UpdateMessageCommandInput = {
-  ts: "xxxxx", // required
-  text: "xxxx", // required
-  channel: "YOUR_CHANNEL_ID", // optional // this channelId override SlackClient config
-  blocks: SupportBlock[] // optional
+  ts: "1234567890.123456", // required
+  text: "Hello client-slack", // required
 };
 
 const command = new UpdateMessageCommand(params);
@@ -159,18 +164,18 @@ const command = new UpdateMessageCommand(params);
 
 Usage info
 
-1. SendScheduleMessageCommand is an extension of SendMessageCommand.
-2. `post_at` type must be in UTC string format, such as `2025-02-15T12:35:17Z` or `2025-02-15T12:35:17.456Z`.
-3. `post_at` must differ from the current time by at least `30 seconds`.
-4. You can only delete a scheduled message if post_at differs from request_time by at least `10 minutes`.
+- SendScheduleMessageCommand is an extension of SendMessageCommand.
+- `post_at` type must be in UTC string format, such as `2025-02-15T12:35:17Z` or `2025-02-15T12:35:17.456Z`.
+- `post_at` must differ from the current time by at least `30 seconds`.
+- You can only delete a scheduled message if post_at differs from request_time by at least `10 minutes`.
+- If you provide the channel ID as an input to the command object, it will override the SlackClient configuration.
 
 ```ts
 import { SendScheduleMessageCommand, SendScheduleMessageCommandInput } from "@ingestkorea/client-slack";
 
 const params: SendScheduleMessageCommandInput = {
-  text: "hello client-slack", // required
   post_at: "2025-02-15T12:35:17.456Z", // required
-  channel: "YOUR_CHANNEL_ID", // optional // this channelId override SlackClient config
+  text: "Hello client-slack", // required
 };
 
 const command = new SendScheduleMessageCommand(params);
@@ -180,14 +185,14 @@ const command = new SendScheduleMessageCommand(params);
 
 Usage info
 
-1. You can only delete a scheduled message if `post_at` differs from request_time by at least `10 minutes`.
+- You can only delete a scheduled message if `post_at` differs from request_time by at least `10 minutes`.
+- If you provide the channel ID as an input to the command object, it will override the SlackClient configuration.
 
 ```ts
 import { DeleteScheduledMessageCommand, DeleteScheduledMessageCommandInput } from "@ingestkorea/client-slack";
 
 const params: DeleteScheduledMessageCommandInput = {
   scheduled_message_id: "xxxxx", // required
-  channel: "YOUR_CHANNEL_ID", // optional // this channelId override SlackClient config
 };
 
 const command = new DeleteScheduledMessageCommand(params);
@@ -198,16 +203,17 @@ const command = new DeleteScheduledMessageCommand(params);
 Usage info
 
 - `latest` or `oldest` params type must be in UTC string format, such as `2025-02-15T12:35:17Z` or `2025-02-15T12:35:17.456Z`.
+- If you provide the channel ID as an input to the command object, it will override the SlackClient configuration.
+- The results are sorted in ascending order by `post_at`.
 
 ```ts
 import { ListScheduledMessagesCommand, ListScheduledMessagesCommandInput } from "@ingestkorea/client-slack";
 
 const params: ListScheduledMessagesCommandInput = {
-  channel: "YOUR_CHANNEL_ID", // optional // this channelId override SlackClient config
-  cursor: "xxxxx", // optional
   oldest: "2025-02-20T12:35:17.456Z", // optional // default: current
   latest: "2025-02-27T12:35:17.456Z", // optional // default: current + 7 days
   limit: 1 ~ 100, // optional // default: 20 // max: 100
+  cursor: "xxxxx", // optional
   team_id: "xxxx", // optional
 };
 
@@ -220,12 +226,17 @@ We recommend using `await` operator to wait for the promise returned by send ope
 
 ```ts
 (async () => {
+  const start = process.hrtime.bigint();
   try {
     // a client can be shared by different commands.
     const data = await client.send(command);
-    console.dir(data, { depth: 4 });
+    console.dir(data, { depth: 5 });
   } catch (err) {
     console.log(err);
+  } finally {
+    let end = process.hrtime.bigint();
+    let duration = Number(end - start) / 1000000;
+    console.log("duration: " + duration + "ms");
   }
 })();
 ```
@@ -236,10 +247,21 @@ We recommend using `await` operator to wait for the promise returned by send ope
 - Promises can also be called using .catch() and .finally() as follows:
 
 ```ts
+const start = process.hrtime.bigint();
+
 client
   .send(command)
-  .then((data) => console.dir(data, { depth: 4 }))
-  .catch((err) => console.log(err));
+  .then((data) => {
+    console.dir(data, { depth: 5 });
+  })
+  .catch((err) => {
+    console.log(err);
+  })
+  .finally(() => {
+    let end = process.hrtime.bigint();
+    let duration = Number(end - start) / 1000000;
+    console.log("duration: " + duration + "ms");
+  });
 ```
 
 ## Getting Help
@@ -251,3 +273,59 @@ If it turns out that you may have found a bug, please open an issue.
 ## License
 
 This SDK is distributed under the [MIT License](https://opensource.org/licenses/MIT), see LICENSE for more information.
+
+## Client Commands
+
+### SendMessage
+
+| Arguments | Type     | Required | Description                                                                                                               |
+| --------- | -------- | -------- | ------------------------------------------------------------------------------------------------------------------------- |
+| text      | string   | true     | Describe the content of the message. When blocks are included, text will be used as fallback text for notifications only. |
+| channel   | string   | false    | This channelId overrides SlackClient config.                                                                              |
+| blocks    | object[] | false    | Array of SupportBlocks.                                                                                                   |
+| thread_ts | string   | false    | Provide another message's ts value to make this message a reply.                                                          |
+| mrkdwn    | boolean  | false    | Disable Slack markup parsing by setting to false. Enabled by default.                                                     |
+
+### DeleteMessage
+
+| Arguments | Type   | Required | Description                                 |
+| --------- | ------ | -------- | ------------------------------------------- |
+| ts        | string | true     | Timestamp of the message to be deleted.     |
+| channel   | string | false    | This channelId overrides SlackClient config |
+
+### UpdateMessage
+
+| Arguments | Type     | Required | Description                                                                                                               |
+| --------- | -------- | -------- | ------------------------------------------------------------------------------------------------------------------------- |
+| ts        | string   | true     | Timestamp of the message to be updated.                                                                                   |
+| text      | string   | true     | Describe the content of the message. When blocks are included, text will be used as fallback text for notifications only. |
+| channel   | string   | false    | This channelId overrides SlackClient config.                                                                              |
+| blocks    | object[] | false    | Array of SupportBlocks.                                                                                                   |
+
+### SendScheduleMessage
+
+| Arguments | Type     | Required | Description                                                                                                               |
+| --------- | -------- | -------- | ------------------------------------------------------------------------------------------------------------------------- |
+| post_at   | string   | true     | UTC ISO8601 format representing the future time the message should post to Slack. (ex.2025-02-20T12:35:17.456Z)           |
+| text      | string   | true     | Describe the content of the message. When blocks are included, text will be used as fallback text for notifications only. |
+| channel   | string   | false    | This channelId overrides SlackClient config                                                                               |
+| blocks    | object[] | false    | Array of SupportBlocks.                                                                                                   |
+| thread_ts | string   | false    | Provide another message's ts value to make this message a reply.                                                          |
+
+### DeleteScheduledMessage
+
+| Arguments            | Type   | Required | Description                                                                                 |
+| -------------------- | ------ | -------- | ------------------------------------------------------------------------------------------- |
+| scheduled_message_id | string | true     | scheduled_message_id returned from call to `SendScheduleMessage` or `ListScheduledMessages` |
+| channel              | string | false    | This channelId overrides SlackClient config                                                 |
+
+### ListScheduledMessages
+
+| Arguments | Type    | Required | Description                                                                                                        |
+| --------- | ------- | -------- | ------------------------------------------------------------------------------------------------------------------ |
+| channel   | string  | false    | This channelId overrides SlackClient config                                                                        |
+| cursor    | string  | false    | For pagination                                                                                                     |
+| oldest    | string  | false    | UTC ISO8601 format of the oldest value in the time range. default: current. (ex.2025-02-20T12:35:17.456Z)          |
+| latest    | string  | false    | UTC ISO8601 format of the latest value in the time range. default: current + 7 days. (ex.2025-02-27T12:35:17.456Z) |
+| limit     | integer | false    | Maximum number of original entries to return. default: 20. max: 100                                                |
+| team_id   | string  | false    | Encoded team id to list channels in, required if org token is used                                                 |

@@ -12,7 +12,7 @@ import {
   SupportElement,
 } from "../models";
 import { SlackClientResolvedConfig } from "../SlackClient";
-import { parseBody, parseErrorBody, deserializeMetadata } from "./constants";
+import { parseBody, parseErrorBody, deserializeMetadata, deserializeSlackErrorInfo } from "./constants";
 import { SendMessageCommandInput, SendMessageCommandOutput } from "../commands";
 
 export const se_SendMessageCommand: RequestSerializer<SendMessageCommandInput, SlackClientResolvedConfig> = async (
@@ -27,8 +27,8 @@ export const se_SendMessageCommand: RequestSerializer<SendMessageCommandInput, S
     "content-type": "application/json; charset=utf-8",
   };
   const body = JSON.stringify({
-    channel: input.channel ? input.channel : config.credentials.channel,
     text: input.text,
+    channel: input.channel ? input.channel : config.credentials.channel,
     ...(input.blocks && { blocks: input.blocks }),
     ...(input.thread_ts && { thread_ts: input.thread_ts }),
     ...(input.mrkdwn && { mrkdwn: input.mrkdwn }),
@@ -64,13 +64,7 @@ export const de_SendMessageCommand: ResponseDeserializer<SendMessageCommandOutpu
 };
 
 export const de_SendMessageResult = (output: any): SendMessageResult => {
-  if (!output.ok) {
-    return {
-      ok: output.ok != null ? output.ok : undefined,
-      ...(output.error && { error: output.error }),
-      ...(output.errors && { errors: output.errors.filter((e: any) => e != null) }),
-    };
-  }
+  if (!output.ok) return deserializeSlackErrorInfo(output);
   return {
     ok: output.ok != null ? output.ok : undefined,
     channel: output.channel ? output.channel : undefined,

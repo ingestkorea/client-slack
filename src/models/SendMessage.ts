@@ -1,6 +1,8 @@
+import { SlackErrorInfo } from "./SlackErrorInfo";
+
 export interface SendMessageRequest extends MessagePayloadForInteraction {
-  channel?: string;
   text: string;
+  channel?: string;
   blocks?: SupportBlock[];
   thread_ts?: string;
   mrkdwn?: boolean; // default true
@@ -13,13 +15,11 @@ export interface MessagePayloadForInteraction {
   delete_original?: boolean; // default true
 }
 
-export interface SendMessageResult {
+export interface SendMessageResult extends SlackErrorInfo {
   ok?: boolean;
   channel?: string;
   ts?: string;
   message?: ReceiveMessage;
-  error?: string;
-  errors?: string[];
 }
 
 export type ReceiveMessage = {

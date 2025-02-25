@@ -25,11 +25,12 @@ export class SendScheduleMessageCommand extends SlackCommand<
     super(input);
     let invalidBlocks = !input.blocks || !input.blocks.length;
     this.input = {
-      text: input.text,
       post_at: verifyPostAt(input.post_at),
+      text: input.text,
       ...(input.channel && { channel: input.channel }),
       ...(input.blocks && { blocks: input.blocks }),
       ...(invalidBlocks && { blocks: [{ type: "section", text: { type: "plain_text", text: input.text } }] }),
+      ...(input.thread_ts && { thread_ts: input.thread_ts }),
     };
     this.serializer = se_SendScheduleMessageCommand;
     this.deserializer = de_SendScheduleMessageCommand;
