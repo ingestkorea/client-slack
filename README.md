@@ -95,6 +95,7 @@ These are the currently supported Blocks, and more will be added in the future.
 - HeaderBlock
 - DividerBlock
 - SectionBlock
+- ContextBlock
 
 If you need more information about Blocks, please visit [Slack Blocks Reference](https://api.slack.com/reference/block-kit/blocks)
 
@@ -102,27 +103,23 @@ If you need more information about Blocks, please visit [Slack Blocks Reference]
 import { SendMessageCommand, SendMessageCommandInput } from "@ingestkorea/client-slack";
 
 const params: SendMessageCommandInput = {
-  text: "Hello client-slack : " + new Date().toISOString(),
+  text: "Hello client-slack",
   blocks: [
-    { type: "header", text: { type: "plain_text", text: "This is HeaderBlock" } },
+    {
+      type: "header",
+      text: { type: "plain_text", text: "HeaderBlock" },
+    },
     { type: "divider" },
     {
       type: "section",
-      text: { type: "mrkdwn", text: "*This is SectionBlock_01*" },
+      text: { type: "mrkdwn", text: "*SectionBlock-01*" },
     },
     {
       type: "section",
+      text: { type: "mrkdwn", text: "_SectionBlock-02_" },
       fields: [
-        { type: "mrkdwn", text: "_This is SectionBlock_02-1_" },
-        { type: "plain_text", emoji: true, text: "This is SectionBlock_02-2" },
-      ],
-    },
-    {
-      type: "section",
-      text: { type: "plain_text", text: "This is SectionBlock_03" },
-      fields: [
-        { type: "mrkdwn", text: "_This is SectionBlock_03-1_" },
-        { type: "plain_text", emoji: true, text: "This is SectionBlock_03-2" },
+        { type: "mrkdwn", text: "*Region:*\n ap-northeast-2" },
+        { type: "mrkdwn", text: `*Date:*\n ${new Date().toISOString()}` },
       ],
     },
   ],

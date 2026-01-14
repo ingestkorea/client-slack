@@ -1,4 +1,5 @@
-import { ReceiveMessage, SupportBlock, SlackErrorInfo } from "./";
+import { SlackErrorInfo } from "./SlackErrorInfo.js";
+import { SupportBlock, ReceiveMessage } from "./SendMessage.js";
 
 export interface SendScheduleMessageRequest {
   post_at: string; // UTC string

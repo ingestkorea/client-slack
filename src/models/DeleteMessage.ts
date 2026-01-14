@@ -1,4 +1,4 @@
-import { SlackErrorInfo } from "./SlackErrorInfo";
+import { SlackErrorInfo } from "./SlackErrorInfo.js";
 
 export interface DeleteMessageRequest {
   ts: string;

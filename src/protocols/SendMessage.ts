@@ -1,4 +1,6 @@
 import { HttpRequest } from "@ingestkorea/util-http-handler";
+import { SlackClientResolvedConfig } from "../SlackClient.js";
+import { parseBody, parseErrorBody, deserializeMetadata, deserializeSlackErrorInfo } from "./constants.js";
 import {
   RequestSerializer,
   ResponseDeserializer,
@@ -10,10 +12,8 @@ import {
   SupportTextType,
   Confirmation,
   SupportElement,
-} from "../models";
-import { SlackClientResolvedConfig } from "../SlackClient";
-import { parseBody, parseErrorBody, deserializeMetadata, deserializeSlackErrorInfo } from "./constants";
-import { SendMessageCommandInput, SendMessageCommandOutput } from "../commands";
+} from "../models/index.js";
+import { SendMessageCommandInput, SendMessageCommandOutput } from "../commands/index.js";
 
 export const se_SendMessageCommand: RequestSerializer<SendMessageCommandInput, SlackClientResolvedConfig> = async (
   input,
@@ -118,6 +118,7 @@ const de_Block = (output: any): SupportBlock => {
     block_id: output.block_id ? output.block_id : undefined,
     ...(output.text && { text: parseTextOrMarkdown(output.text) }),
     ...(output.fields && { fields: de_FieldList(output.fields) }),
+    ...(output.elements && { elements: de_FieldList(output.elements) }),
     ...(output.accessory && { accessory: de_Accessory(output.accessory) }),
   };
 };

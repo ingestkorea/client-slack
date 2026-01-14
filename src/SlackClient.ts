@@ -1,15 +1,7 @@
 import { NodeHttpHandler } from "@ingestkorea/util-http-handler";
 import { IngestkoreaError } from "@ingestkorea/util-error-handler";
-import { SlackCommand, Middleware, Handler } from "./models";
-import {
-  middlewareSerialize,
-  middlewareDeserialize,
-  middlewareSlackAuth,
-  middlewareIngestkoreaMetadata,
-  middlewareRetry,
-  middlewareSortHeaders,
-  middlewareSign,
-} from "./middleware";
+import { SlackCommand, Middleware, Handler } from "./models/index.js";
+import { middlewareAuth, middlewareIngestkoreaMetadata, middlewareSign, middlewareRetry } from "./middleware/index.js";
 
 export type Credentials = {
   token?: string;
@@ -17,15 +9,15 @@ export type Credentials = {
   secret?: string;
 };
 
+export interface SlackClientConfig {
+  credentials?: Credentials;
+}
+
 export type ResolvedCredentials = {
   token: string;
   channel: string;
   secret?: string;
 };
-
-export interface SlackClientConfig {
-  credentials?: Credentials;
-}
 
 export interface SlackClientResolvedConfig {
   credentials: ResolvedCredentials;
@@ -33,39 +25,35 @@ export interface SlackClientResolvedConfig {
 
 export class SlackClient {
   config: SlackClientResolvedConfig;
-  private requestHandler: Handler<any, any>;
+  private httpHandler = new NodeHttpHandler({ connectionTimeout: 3000, socketTimeout: 3000 });
+  private requestHandler: Handler = async (input, context) => this.httpHandler.handle(input.request);
+
   constructor(config: SlackClientConfig) {
     this.config = {
       credentials: resolveCredentials(config),
     };
-    this.requestHandler = async (request) => {
-      const httpHandler = new NodeHttpHandler({ connectionTimeout: 3000, socketTimeout: 3000 });
-      return httpHandler.handle(request);
-    };
   }
+
   async send<T, P>(command: SlackCommand<T, P, SlackClientResolvedConfig>): Promise<P> {
-    const stack = [
-      middlewareSerialize(command.serializer),
-      middlewareIngestkoreaMetadata,
-      middlewareSign,
-      middlewareSlackAuth,
-      middlewareSortHeaders,
-      middlewareRetry,
-      middlewareDeserialize(command.deserializer),
-    ];
-    const handler = composeMiddleware(stack, this.config, this.requestHandler);
-    const response = await handler(command.input);
-    return response.output;
+    const { input, serializer, deserializer } = command;
+
+    const middlewares: Middleware[] = [middlewareAuth, middlewareIngestkoreaMetadata, middlewareSign, middlewareRetry];
+    const handler = composeMiddleware(middlewares, this.requestHandler);
+
+    try {
+      const request = await serializer(input, this.config);
+      const { response } = await handler({ request }, this.config);
+      const output = await deserializer(response, this.config);
+      return output;
+    } catch (e) {
+      throw e;
+    }
   }
 }
 
-const composeMiddleware = (
-  middlewares: Middleware<any, any>[],
-  config: SlackClientResolvedConfig,
-  finalHandler: Handler<any, any>
-) => {
+const composeMiddleware = (middlewares: Middleware[], finalHandler: Handler): Handler => {
   const handler = middlewares.reduceRight((next, middleware) => {
-    return middleware(next, config);
+    return middleware(next);
   }, finalHandler);
   return handler;
 };

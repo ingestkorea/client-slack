@@ -5,9 +5,9 @@ import {
   MetadataBearer,
   RequestSerializer,
   ResponseDeserializer,
-} from "../models";
-import { SlackClientResolvedConfig } from "../SlackClient";
-import { se_SendMessageCommand, de_SendMessageCommand } from "../protocols";
+} from "../models/index.js";
+import { SlackClientResolvedConfig } from "../SlackClient.js";
+import { se_SendMessageCommand, de_SendMessageCommand } from "../protocols/index.js";
 
 export interface SendMessageCommandInput extends SendMessageRequest {}
 export interface SendMessageCommandOutput extends MetadataBearer, SendMessageResult {}

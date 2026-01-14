@@ -1,4 +1,4 @@
-import { SlackErrorInfo } from "./SlackErrorInfo";
+import { SlackErrorInfo } from "./SlackErrorInfo.js";
 
 export interface DeleteScheduledMessageRequest {
   scheduled_message_id: string;

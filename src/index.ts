@@ -1,2 +1,2 @@
-export * from "./commands";
-export * from "./SlackClient";
+export * from "./commands/index.js";
+export * from "./SlackClient.js";

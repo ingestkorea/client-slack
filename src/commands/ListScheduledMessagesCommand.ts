@@ -6,9 +6,9 @@ import {
   MetadataBearer,
   RequestSerializer,
   ResponseDeserializer,
-} from "../models";
-import { SlackClientResolvedConfig } from "../SlackClient";
-import { se_ListScheduledMessagesCommand, de_ListScheduledMessagesCommand } from "../protocols";
+} from "../models/index.js";
+import { SlackClientResolvedConfig } from "../SlackClient.js";
+import { se_ListScheduledMessagesCommand, de_ListScheduledMessagesCommand } from "../protocols/index.js";
 
 export interface ListScheduledMessagesCommandInput extends ListScheduledMessagesRequest {}
 export interface ListScheduledMessagesCommandOutput extends MetadataBearer, ListScheduledMessagesResult {}

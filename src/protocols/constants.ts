@@ -1,10 +1,16 @@
 import { IngestkoreaError, ingestkoreaErrorCodeChecker } from "@ingestkorea/util-error-handler";
 import { HttpResponse, collectBodyString, destroyStream } from "@ingestkorea/util-http-handler";
-import { ResponseMetadata, SlackErrorInfo } from "../models";
+import { ResponseMetadata, SlackErrorInfo } from "../models/index.js";
+import { INGESTKOREA_RETRY, INGESTKOREA_RETRY_DELAY } from "../middleware/constants.js";
 
 export const deserializeMetadata = (response: HttpResponse): ResponseMetadata => {
+  const attempts = response.headers[INGESTKOREA_RETRY] || undefined;
+  const totalRetryDelay = response.headers[INGESTKOREA_RETRY_DELAY] || undefined;
+
   return {
     httpStatusCode: response.statusCode,
+    ...(attempts && { attempts: Number(attempts) }),
+    ...(totalRetryDelay && { totalRetryDelay: Number(totalRetryDelay) }),
   };
 };
 

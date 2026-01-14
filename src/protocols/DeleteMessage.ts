@@ -1,8 +1,8 @@
 import { HttpRequest } from "@ingestkorea/util-http-handler";
-import { RequestSerializer, ResponseDeserializer, DeleteMessageResult } from "../models";
-import { SlackClientResolvedConfig } from "../SlackClient";
-import { parseBody, parseErrorBody, deserializeMetadata, deserializeSlackErrorInfo } from "./constants";
-import { DeleteMessageCommandInput, DeleteMessageCommandOutput } from "../commands";
+import { SlackClientResolvedConfig } from "../SlackClient.js";
+import { parseBody, parseErrorBody, deserializeMetadata, deserializeSlackErrorInfo } from "./constants.js";
+import { RequestSerializer, ResponseDeserializer, DeleteMessageResult } from "../models/index.js";
+import { DeleteMessageCommandInput, DeleteMessageCommandOutput } from "../commands/index.js";
 
 export const se_DeleteMessageCommand: RequestSerializer<DeleteMessageCommandInput, SlackClientResolvedConfig> = async (
   input,

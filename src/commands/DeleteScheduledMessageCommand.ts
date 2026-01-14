@@ -5,9 +5,9 @@ import {
   MetadataBearer,
   RequestSerializer,
   ResponseDeserializer,
-} from "../models";
-import { SlackClientResolvedConfig } from "../SlackClient";
-import { se_DeleteScheduledMessageCommand, de_DeleteScheduledMessageCommand } from "../protocols";
+} from "../models/index.js";
+import { SlackClientResolvedConfig } from "../SlackClient.js";
+import { se_DeleteScheduledMessageCommand, de_DeleteScheduledMessageCommand } from "../protocols/index.js";
 
 export interface DeleteScheduledMessageCommandInput extends DeleteScheduledMessageRequest {}
 export interface DeleteScheduledMessageCommandOutput extends MetadataBearer, DeleteScheduledMessageResult {}

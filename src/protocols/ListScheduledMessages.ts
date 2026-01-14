@@ -1,20 +1,20 @@
 import { HttpRequest } from "@ingestkorea/util-http-handler";
-import {
-  RequestSerializer,
-  ResponseDeserializer,
-  ListScheduledMessagesResult,
-  ScheduledMessage,
-  NextCursor,
-} from "../models";
-import { SlackClientResolvedConfig } from "../SlackClient";
+import { SlackClientResolvedConfig } from "../SlackClient.js";
 import {
   parseBody,
   parseErrorBody,
   deserializeMetadata,
   deserializeSlackErrorInfo,
   convertSecondsToUtcString,
-} from "./constants";
-import { ListScheduledMessagesCommandInput, ListScheduledMessagesCommandOutput } from "../commands";
+} from "./constants.js";
+import {
+  RequestSerializer,
+  ResponseDeserializer,
+  ListScheduledMessagesResult,
+  ScheduledMessage,
+  NextCursor,
+} from "../models/index.js";
+import { ListScheduledMessagesCommandInput, ListScheduledMessagesCommandOutput } from "../commands/index.js";
 
 export const se_ListScheduledMessagesCommand: RequestSerializer<
   ListScheduledMessagesCommandInput,

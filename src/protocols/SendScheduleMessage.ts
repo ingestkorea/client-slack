@@ -1,15 +1,15 @@
 import { HttpRequest } from "@ingestkorea/util-http-handler";
-import { RequestSerializer, ResponseDeserializer, SendScheduleMessageResult } from "../models";
-import { SlackClientResolvedConfig } from "../SlackClient";
+import { SlackClientResolvedConfig } from "../SlackClient.js";
 import {
   parseBody,
   parseErrorBody,
   deserializeMetadata,
   deserializeSlackErrorInfo,
   convertSecondsToUtcString,
-} from "./constants";
-import { SendScheduleMessageCommandInput, SendScheduleMessageCommandOutput } from "../commands";
-import { de_ReceiveMessage } from "./SendMessage";
+} from "./constants.js";
+import { RequestSerializer, ResponseDeserializer, SendScheduleMessageResult } from "../models/index.js";
+import { SendScheduleMessageCommandInput, SendScheduleMessageCommandOutput } from "../commands/index.js";
+import { de_ReceiveMessage } from "./SendMessage.js";
 
 export const se_SendScheduleMessageCommand: RequestSerializer<
   SendScheduleMessageCommandInput,

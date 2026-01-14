@@ -1,10 +1,12 @@
-import { Middleware } from "../models";
+import { Middleware } from "../models/index.js";
 
-export const middlewareSlackAuth: Middleware<any, any> = (next, context) => async (request) => {
-  const { token } = context.credentials;
-  request.headers = {
-    ...request.headers,
-    ["authorization"]: "Bearer" + " " + token,
+export const middlewareAuth: Middleware = (next) => async (input, context) => {
+  const { credentials } = context;
+
+  input.request.headers = {
+    ...input.request.headers,
+    ["authorization"]: "Bearer" + " " + credentials.token,
   };
-  return next(request);
+
+  return next(input, context);
 };

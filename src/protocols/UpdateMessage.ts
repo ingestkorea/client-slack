@@ -1,9 +1,15 @@
 import { HttpRequest } from "@ingestkorea/util-http-handler";
-import { RequestSerializer, ResponseDeserializer, UpdateMessageResult, UpdatedMessage, EditedInfo } from "../models";
-import { SlackClientResolvedConfig } from "../SlackClient";
-import { UpdateMessageCommandInput, UpdateMessageCommandOutput } from "../commands";
-import { parseBody, parseErrorBody, deserializeMetadata, deserializeSlackErrorInfo } from "./constants";
-import { de_ReceiveMessage } from "./SendMessage";
+import { SlackClientResolvedConfig } from "../SlackClient.js";
+import { parseBody, parseErrorBody, deserializeMetadata, deserializeSlackErrorInfo } from "./constants.js";
+import {
+  RequestSerializer,
+  ResponseDeserializer,
+  UpdateMessageResult,
+  UpdatedMessage,
+  EditedInfo,
+} from "../models/index.js";
+import { UpdateMessageCommandInput, UpdateMessageCommandOutput } from "../commands/index.js";
+import { de_ReceiveMessage } from "./SendMessage.js";
 
 export const se_UpdateMessageCommand: RequestSerializer<UpdateMessageCommandInput, SlackClientResolvedConfig> = async (
   input,

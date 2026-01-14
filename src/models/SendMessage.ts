@@ -1,4 +1,4 @@
-import { SlackErrorInfo } from "./SlackErrorInfo";
+import { SlackErrorInfo } from "./SlackErrorInfo.js";
 
 export interface SendMessageRequest extends MessagePayloadForInteraction {
   text: string;
@@ -64,7 +64,13 @@ export interface HeaderBlock {
   block_id?: string;
 }
 
-export type SupportBlock = SectionBlock | DividerBlock | HeaderBlock;
+export interface ContextBlock {
+  type: "context";
+  elements?: SupportTextType[];
+  block_id?: string;
+}
+
+export type SupportBlock = SectionBlock | DividerBlock | HeaderBlock | ContextBlock;
 export type SupportTextType = PlainText | Markdown;
 export type SupportElement = ButtonElement;
 

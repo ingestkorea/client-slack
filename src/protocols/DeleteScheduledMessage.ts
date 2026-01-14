@@ -1,8 +1,8 @@
 import { HttpRequest } from "@ingestkorea/util-http-handler";
-import { RequestSerializer, ResponseDeserializer, DeleteScheduledMessageResult } from "../models";
-import { SlackClientResolvedConfig } from "../SlackClient";
-import { parseBody, parseErrorBody, deserializeMetadata, deserializeSlackErrorInfo } from "./constants";
-import { DeleteScheduledMessageCommandInput, DeleteScheduledMessageCommandOutput } from "../commands";
+import { SlackClientResolvedConfig } from "../SlackClient.js";
+import { parseBody, parseErrorBody, deserializeMetadata, deserializeSlackErrorInfo } from "./constants.js";
+import { RequestSerializer, ResponseDeserializer, DeleteScheduledMessageResult } from "../models/index.js";
+import { DeleteScheduledMessageCommandInput, DeleteScheduledMessageCommandOutput } from "../commands/index.js";
 
 export const se_DeleteScheduledMessageCommand: RequestSerializer<
   DeleteScheduledMessageCommandInput,

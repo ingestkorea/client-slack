@@ -5,9 +5,9 @@ import {
   MetadataBearer,
   RequestSerializer,
   ResponseDeserializer,
-} from "../models";
-import { SlackClientResolvedConfig } from "../SlackClient";
-import { se_DeleteMessageCommand, de_DeleteMessageCommand } from "../protocols";
+} from "../models/index.js";
+import { SlackClientResolvedConfig } from "../SlackClient.js";
+import { se_DeleteMessageCommand, de_DeleteMessageCommand } from "../protocols/index.js";
 
 export interface DeleteMessageCommandInput extends DeleteMessageRequest {}
 export interface DeleteMessageCommandOutput extends MetadataBearer, DeleteMessageResult {}

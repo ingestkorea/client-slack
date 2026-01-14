@@ -1,24 +1,11 @@
-import { Middleware } from "../models";
-import { INGESTKOREA_USER_AGENT, INGESTKOREA_DATE } from "./constatns";
+import { Middleware } from "../models/index.js";
+import { INGESTKOREA_USER_AGENT } from "./constants.js";
 
-export const middlewareIngestkoreaMetadata: Middleware<any, any> = (next, context) => async (request) => {
-  const { longDate } = convertFormatDate();
-  request.headers = {
-    ...request.headers,
-    [INGESTKOREA_DATE]: longDate,
-    [INGESTKOREA_USER_AGENT]: "@ingestkorea/client-slack/1.1.x",
+export const middlewareIngestkoreaMetadata: Middleware = (next) => async (input, context) => {
+  input.request.headers = {
+    ...input.request.headers,
+    [INGESTKOREA_USER_AGENT]: "@ingestkorea/client-slack/1.2.x",
   };
-  return next(request);
-};
 
-/**
- * @param input milliseconds
- */
-const convertFormatDate = (input?: string | number) => {
-  let milliseconds = input ? Number(input) : new Date().getTime();
-  let iso8601 = new Date(milliseconds).toISOString().replace(/\.\d{3}Z$/, "Z");
-
-  let longDate = iso8601.replace(/[\-:]/g, "");
-  let shortDate = longDate.slice(0, 8);
-  return { longDate, shortDate };
+  return next(input, context);
 };

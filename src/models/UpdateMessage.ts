@@ -1,4 +1,5 @@
-import { SupportBlock, ReceiveMessage, SlackErrorInfo } from "./";
+import { SlackErrorInfo } from "./SlackErrorInfo.js";
+import { SupportBlock, ReceiveMessage } from "./SendMessage.js";
 
 export interface UpdateMessageRequest {
   ts: string;
