@@ -1,30 +1,16 @@
 import { NodeHttpHandler } from "@ingestkorea/util-http-handler";
-import { IngestkoreaError } from "@ingestkorea/util-error-handler";
-import { SlackCommand, Middleware, Handler } from "./models/index.js";
+import {
+  SlackClientConfig,
+  SlackClientResolvedConfig,
+  SlackCommand,
+  Middleware,
+  Handler,
+  SlackClientError,
+} from "./models/index.js";
 import { middlewareAuth, middlewareIngestkoreaMetadata, middlewareSign, middlewareRetry } from "./middleware/index.js";
 
-export type Credentials = {
-  token?: string;
-  channel?: string;
-  secret?: string;
-};
-
-export interface SlackClientConfig {
-  credentials?: Credentials;
-}
-
-export type ResolvedCredentials = {
-  token: string;
-  channel: string;
-  secret?: string;
-};
-
-export interface SlackClientResolvedConfig {
-  credentials: ResolvedCredentials;
-}
-
 export class SlackClient {
-  config: SlackClientResolvedConfig;
+  private config: SlackClientResolvedConfig;
   private httpHandler = new NodeHttpHandler({ connectionTimeout: 3000, socketTimeout: 3000 });
   private requestHandler: Handler = async (input, context) => this.httpHandler.handle(input.request);
 
@@ -45,8 +31,12 @@ export class SlackClient {
       const { response } = await handler({ request }, this.config);
       const output = await deserializer(response, this.config);
       return output;
-    } catch (e) {
-      throw e;
+    } catch (err) {
+      if (err instanceof SlackClientError) throw err;
+      throw new SlackClientError({
+        type: "UNKNOWN_ERROR",
+        message: err instanceof Error ? err.message : "unknown error",
+      });
     }
   }
 }
@@ -58,22 +48,21 @@ const composeMiddleware = (middlewares: Middleware[], finalHandler: Handler): Ha
   return handler;
 };
 
-const resolveCredentials = (config: SlackClientConfig): ResolvedCredentials => {
+const resolveCredentials = (config: SlackClientConfig): SlackClientResolvedConfig["credentials"] => {
   const { credentials } = config;
 
-  let error = new IngestkoreaError({
-    code: 401,
-    type: "Unauthorized",
-    message: "Invalid Credentials",
-    description: "Credentials undefined",
+  let error = new SlackClientError({
+    type: "AUTH_ERROR",
+    message: "Credentials undefined",
   });
+
   if (!credentials) throw error;
   if (!credentials.token) {
-    error.error.description = "Please Check API Token. (Bot token strings begin with xoxb-....)";
+    error.message = "Please Check API Token. (Bot token strings begin with xoxb-....)";
     throw error;
   }
   if (!credentials.channel) {
-    error.error.description = "Please Check ChannelID";
+    error.message = "Please Check ChannelID";
     throw error;
   }
 

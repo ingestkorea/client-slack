@@ -1,17 +1,17 @@
-import { IngestkoreaError } from "@ingestkorea/util-error-handler";
 import {
+  SlackClientResolvedConfig,
   SlackCommand,
   SendScheduleMessageRequest,
   SendScheduleMessageResult,
   MetadataBearer,
   RequestSerializer,
   ResponseDeserializer,
+  SlackClientError,
 } from "../models/index.js";
-import { SlackClientResolvedConfig } from "../SlackClient.js";
 import { se_SendScheduleMessageCommand, de_SendScheduleMessageCommand } from "../protocols/index.js";
 
-export interface SendScheduleMessageCommandInput extends SendScheduleMessageRequest {}
-export interface SendScheduleMessageCommandOutput extends MetadataBearer, SendScheduleMessageResult {}
+export type SendScheduleMessageCommandInput = SendScheduleMessageRequest;
+export type SendScheduleMessageCommandOutput = MetadataBearer & SendScheduleMessageResult;
 
 export class SendScheduleMessageCommand extends SlackCommand<
   SendScheduleMessageCommandInput,
@@ -25,7 +25,7 @@ export class SendScheduleMessageCommand extends SlackCommand<
     super(input);
     let invalidBlocks = !input.blocks || !input.blocks.length;
     this.input = {
-      post_at: verifyPostAt(input.post_at),
+      post_at: resolvePostAt(input.post_at),
       text: input.text,
       ...(input.channel && { channel: input.channel }),
       ...(input.blocks && { blocks: input.blocks }),
@@ -37,29 +37,25 @@ export class SendScheduleMessageCommand extends SlackCommand<
   }
 }
 
-const verifyPostAt = (input: string): string => {
-  let error = new IngestkoreaError({
-    code: 400,
-    type: "Bad Request",
-    message: "Invalid Request",
-    description: "VerifyPostAt Error",
-  });
+const resolvePostAt = (post_at: string): string => {
+  const utcZRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
+  const MIN_DIFFER = 30_000;
 
-  const isUTC = input.match(/Z/gi); // null
-  const isDate = input.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}/gi);
-  if (!isUTC || !isDate) {
-    error.error.description =
-      "post_at type must be in UTC string format, such as 2025-02-15T12:35:17Z or 2025-02-15T12:35:17.456Z.";
-    throw error;
+  if (!utcZRegex.test(post_at)) {
+    throw new SlackClientError({
+      type: "GENERAL_ERROR",
+      message: "post_at type must be in UTC string format, such as 2025-02-15T12:35:17.456Z",
+    });
   }
 
-  input = input.replace(/\.\d{3}Z$/, "Z");
-  const scheduled = new Date(input).getTime();
+  const scheduled = new Date(post_at).getTime();
   const curr = new Date().getTime();
 
-  if (scheduled - curr < 30000) {
-    error.error.description = "post_at must differ from the current time by at least 30 seconds.";
-    throw error;
+  if (scheduled - curr < MIN_DIFFER) {
+    throw new SlackClientError({
+      type: "GENERAL_ERROR",
+      message: "post_at must differ from the current time by at least 30 seconds.",
+    });
   }
-  return input;
+  return post_at.replace(/\.\d+Z$/, "Z");
 };

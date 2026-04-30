@@ -1,19 +1,18 @@
-import { SlackErrorInfo } from "./SlackErrorInfo.js";
+import { SlackAPIResult } from "./SlackAPI.js";
 
-export interface ListScheduledMessagesRequest {
+export type ListScheduledMessagesRequest = {
   oldest?: string; // UTC string
   latest?: string; // UTC string
   limit?: number;
   channel?: string;
   cursor?: string;
   team_id?: string;
-}
+};
 
-export interface ListScheduledMessagesResult extends SlackErrorInfo {
-  ok?: boolean;
-  scheduled_messages?: ScheduledMessage[];
+export type ListScheduledMessagesResult = SlackAPIResult<{
+  scheduled_messages: ScheduledMessage[];
   response_metadata?: NextCursor;
-}
+}>;
 
 export type ScheduledMessage = ScheduledMessageDefault & ScheduledMessageCustom;
 

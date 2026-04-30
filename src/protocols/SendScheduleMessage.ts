@@ -1,14 +1,19 @@
 import { HttpRequest } from "@ingestkorea/util-http-handler";
-import { SlackClientResolvedConfig } from "../SlackClient.js";
+import {
+  SlackClientResolvedConfig,
+  RequestSerializer,
+  ResponseDeserializer,
+  SendScheduleMessageResult,
+} from "../models/index.js";
+import { SendScheduleMessageCommandInput, SendScheduleMessageCommandOutput } from "../commands/index.js";
 import {
   parseBody,
   parseErrorBody,
   deserializeMetadata,
   deserializeSlackErrorInfo,
   convertSecondsToUtcString,
+  compact,
 } from "./constants.js";
-import { RequestSerializer, ResponseDeserializer, SendScheduleMessageResult } from "../models/index.js";
-import { SendScheduleMessageCommandInput, SendScheduleMessageCommandOutput } from "../commands/index.js";
 import { de_ReceiveMessage } from "./SendMessage.js";
 
 export const se_SendScheduleMessageCommand: RequestSerializer<
@@ -31,10 +36,10 @@ export const se_SendScheduleMessageCommand: RequestSerializer<
   return new HttpRequest({
     protocol: "https:",
     method: "POST",
-    hostname: hostname,
-    path: path,
-    headers: headers,
-    body: body,
+    hostname,
+    path,
+    headers,
+    body,
   });
 };
 
@@ -44,24 +49,22 @@ export const de_SendScheduleMessageCommand: ResponseDeserializer<
 > = async (response, config) => {
   if (response.statusCode > 300) await parseErrorBody(response);
 
-  let data = await parseBody(response);
-
-  let contents: any = {};
-  contents = de_SendScheduleMessageResult(data);
+  const data = await parseBody(response);
+  const contents = de_SendScheduleMessageResult(data);
 
   return {
     $metadata: deserializeMetadata(response),
-    ...contents,
+    ...compact(contents),
   };
 };
 
 const de_SendScheduleMessageResult = (output: any): SendScheduleMessageResult => {
   if (!output.ok) return deserializeSlackErrorInfo(output);
   return {
-    ok: output.ok != null ? output.ok : undefined,
-    channel: output.channel ? output.channel : undefined,
-    scheduled_message_id: output.scheduled_message_id ? output.scheduled_message_id : undefined,
-    post_at: output.post_at ? output.post_at : undefined,
+    ok: true,
+    channel: output.channel ?? "",
+    scheduled_message_id: output.scheduled_message_id ?? "",
+    post_at: output.post_at ?? 0,
     post_at_utc: output.post_at ? convertSecondsToUtcString(output.post_at) : undefined,
     message: output.message ? de_ReceiveMessage(output.message) : undefined,
   };

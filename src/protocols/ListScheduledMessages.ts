@@ -1,13 +1,6 @@
 import { HttpRequest } from "@ingestkorea/util-http-handler";
-import { SlackClientResolvedConfig } from "../SlackClient.js";
 import {
-  parseBody,
-  parseErrorBody,
-  deserializeMetadata,
-  deserializeSlackErrorInfo,
-  convertSecondsToUtcString,
-} from "./constants.js";
-import {
+  SlackClientResolvedConfig,
   RequestSerializer,
   ResponseDeserializer,
   ListScheduledMessagesResult,
@@ -15,6 +8,14 @@ import {
   NextCursor,
 } from "../models/index.js";
 import { ListScheduledMessagesCommandInput, ListScheduledMessagesCommandOutput } from "../commands/index.js";
+import {
+  parseBody,
+  parseErrorBody,
+  deserializeMetadata,
+  deserializeSlackErrorInfo,
+  convertSecondsToUtcString,
+  compact,
+} from "./constants.js";
 
 export const se_ListScheduledMessagesCommand: RequestSerializer<
   ListScheduledMessagesCommandInput,
@@ -37,10 +38,10 @@ export const se_ListScheduledMessagesCommand: RequestSerializer<
   return new HttpRequest({
     protocol: "https:",
     method: "POST",
-    hostname: hostname,
-    path: path,
-    headers: headers,
-    body: body,
+    hostname,
+    path,
+    headers,
+    body,
   });
 };
 
@@ -50,22 +51,20 @@ export const de_ListScheduledMessagesCommand: ResponseDeserializer<
 > = async (response, config) => {
   if (response.statusCode > 300) await parseErrorBody(response);
 
-  let data = await parseBody(response);
-
-  let contents: any = {};
-  contents = de_ListScheduledMessagesResult(data);
+  const data = await parseBody(response);
+  const contents = de_ListScheduledMessagesResult(data);
 
   return {
     $metadata: deserializeMetadata(response),
-    ...contents,
+    ...compact(contents),
   };
 };
 
 const de_ListScheduledMessagesResult = (output: any): ListScheduledMessagesResult => {
   if (!output.ok) return deserializeSlackErrorInfo(output);
   return {
-    ok: output.ok != null ? output.ok : undefined,
-    scheduled_messages: output.scheduled_messages ? de_ScheduledMessageList(output.scheduled_messages) : undefined,
+    ok: true,
+    scheduled_messages: output.scheduled_messages ? de_ScheduledMessageList(output.scheduled_messages) : [],
     response_metadata: output.response_metadata ? de_NextCursor(output.response_metadata) : undefined,
   };
 };

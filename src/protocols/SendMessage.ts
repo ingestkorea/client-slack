@@ -1,7 +1,6 @@
 import { HttpRequest } from "@ingestkorea/util-http-handler";
-import { SlackClientResolvedConfig } from "../SlackClient.js";
-import { parseBody, parseErrorBody, deserializeMetadata, deserializeSlackErrorInfo } from "./constants.js";
 import {
+  SlackClientResolvedConfig,
   RequestSerializer,
   ResponseDeserializer,
   SendMessageResult,
@@ -14,6 +13,7 @@ import {
   SupportElement,
 } from "../models/index.js";
 import { SendMessageCommandInput, SendMessageCommandOutput } from "../commands/index.js";
+import { parseBody, parseErrorBody, deserializeMetadata, deserializeSlackErrorInfo, compact } from "./constants.js";
 
 export const se_SendMessageCommand: RequestSerializer<SendMessageCommandInput, SlackClientResolvedConfig> = async (
   input,
@@ -39,10 +39,10 @@ export const se_SendMessageCommand: RequestSerializer<SendMessageCommandInput, S
   return new HttpRequest({
     protocol: "https:",
     method: "POST",
-    hostname: hostname,
-    path: path,
-    headers: headers,
-    body: body,
+    hostname,
+    path,
+    headers,
+    body,
   });
 };
 
@@ -52,36 +52,34 @@ export const de_SendMessageCommand: ResponseDeserializer<SendMessageCommandOutpu
 ) => {
   if (response.statusCode > 300) await parseErrorBody(response);
 
-  let data = await parseBody(response);
-
-  let contents: any = {};
-  contents = de_SendMessageResult(data);
+  const data = await parseBody(response);
+  const contents = de_SendMessageResult(data);
 
   return {
     $metadata: deserializeMetadata(response),
-    ...contents,
+    ...compact(contents),
   };
 };
 
 export const de_SendMessageResult = (output: any): SendMessageResult => {
   if (!output.ok) return deserializeSlackErrorInfo(output);
   return {
-    ok: output.ok != null ? output.ok : undefined,
-    channel: output.channel ? output.channel : undefined,
-    ts: output.ts ? output.ts : undefined,
+    ok: true,
+    channel: output.channel ?? "",
+    ts: output.ts ?? "",
     message: output.message ? de_ReceiveMessage(output.message) : undefined,
   };
 };
 
 export const de_ReceiveMessage = (output: any): ReceiveMessage => {
   return {
-    user: output.user ? output.user : undefined,
-    type: output.type ? output.type : undefined,
-    ts: output.ts ? output.ts : undefined,
-    bot_id: output.bot_id ? output.bot_id : undefined,
-    app_id: output.app_id ? output.app_id : undefined,
-    text: output.text ? output.text : undefined,
-    team: output.team ? output.team : undefined,
+    user: output.user ?? undefined,
+    type: output.type ?? undefined,
+    ts: output.ts ?? undefined,
+    bot_id: output.bot_id ?? undefined,
+    app_id: output.app_id ?? undefined,
+    text: output.text ?? undefined,
+    team: output.team ?? undefined,
     bot_profile: output.bot_profile ? de_BotFrofile(output.bot_profile) : undefined,
     blocks: output.blocks ? de_BlockList(output.blocks) : undefined,
   };
@@ -89,13 +87,13 @@ export const de_ReceiveMessage = (output: any): ReceiveMessage => {
 
 const de_BotFrofile = (output: any): BotFrofile => {
   return {
-    id: output.id ? output.id : undefined,
-    app_id: output.app_id ? output.app_id : undefined,
-    name: output.name ? output.name : undefined,
+    id: output.id ?? undefined,
+    app_id: output.app_id ?? undefined,
+    name: output.name ?? undefined,
     icons: output.icons ? de_Icons(output.icons) : undefined,
-    deleted: output.deleted != null ? output.deleted : undefined,
-    updated: output.updated ? output.updated : undefined,
-    team_id: output.team_id ? output.team_id : undefined,
+    deleted: output.deleted ?? undefined,
+    updated: output.updated ?? undefined,
+    team_id: output.team_id ?? undefined,
   };
 };
 

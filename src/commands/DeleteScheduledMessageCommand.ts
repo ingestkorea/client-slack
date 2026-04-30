@@ -1,4 +1,5 @@
 import {
+  SlackClientResolvedConfig,
   SlackCommand,
   DeleteScheduledMessageRequest,
   DeleteScheduledMessageResult,
@@ -6,11 +7,10 @@ import {
   RequestSerializer,
   ResponseDeserializer,
 } from "../models/index.js";
-import { SlackClientResolvedConfig } from "../SlackClient.js";
 import { se_DeleteScheduledMessageCommand, de_DeleteScheduledMessageCommand } from "../protocols/index.js";
 
-export interface DeleteScheduledMessageCommandInput extends DeleteScheduledMessageRequest {}
-export interface DeleteScheduledMessageCommandOutput extends MetadataBearer, DeleteScheduledMessageResult {}
+export type DeleteScheduledMessageCommandInput = DeleteScheduledMessageRequest;
+export type DeleteScheduledMessageCommandOutput = MetadataBearer & DeleteScheduledMessageResult;
 
 export class DeleteScheduledMessageCommand extends SlackCommand<
   DeleteScheduledMessageCommandInput,

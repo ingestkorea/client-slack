@@ -1,26 +1,25 @@
-import { SlackErrorInfo } from "./SlackErrorInfo.js";
+import { SlackAPIResult } from "./SlackAPI.js";
 
-export interface SendMessageRequest extends MessagePayloadForInteraction {
+export type SendMessageRequest = MessagePayloadForInteraction & {
   text: string;
   channel?: string;
   blocks?: SupportBlock[];
   thread_ts?: string;
   mrkdwn?: boolean; // default true
-}
+};
 
-export interface MessagePayloadForInteraction {
+export type MessagePayloadForInteraction = {
   response_url?: string;
   response_type?: "in_channel";
   replace_original?: boolean; // default true
   delete_original?: boolean; // default true
-}
+};
 
-export interface SendMessageResult extends SlackErrorInfo {
-  ok?: boolean;
-  channel?: string;
-  ts?: string;
+export type SendMessageResult = SlackAPIResult<{
+  ts: string;
+  channel: string;
   message?: ReceiveMessage;
-}
+}>;
 
 export type ReceiveMessage = {
   user?: string;

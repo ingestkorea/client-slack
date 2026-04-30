@@ -1,17 +1,21 @@
-import { IngestkoreaError } from "@ingestkorea/util-error-handler";
 import {
+  SlackClientResolvedConfig,
   SlackCommand,
   ListScheduledMessagesRequest,
   ListScheduledMessagesResult,
   MetadataBearer,
   RequestSerializer,
   ResponseDeserializer,
+  SlackClientError,
 } from "../models/index.js";
-import { SlackClientResolvedConfig } from "../SlackClient.js";
 import { se_ListScheduledMessagesCommand, de_ListScheduledMessagesCommand } from "../protocols/index.js";
 
-export interface ListScheduledMessagesCommandInput extends ListScheduledMessagesRequest {}
-export interface ListScheduledMessagesCommandOutput extends MetadataBearer, ListScheduledMessagesResult {}
+export type ListScheduledMessagesCommandInput = ListScheduledMessagesRequest;
+export type ListScheduledMessagesCommandOutput = MetadataBearer & ListScheduledMessagesResult;
+
+const DEFAULT_RANGE = 7 * 86_400 * 1_000;
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
 
 export class ListScheduledMessagesCommand extends SlackCommand<
   ListScheduledMessagesCommandInput,
@@ -24,13 +28,13 @@ export class ListScheduledMessagesCommand extends SlackCommand<
   constructor(input: ListScheduledMessagesCommandInput) {
     super(input);
     const curr = new Date();
-    const after_one_week_ms = curr.getTime() + getMsByDay(7);
+    const default_oldest = curr.toISOString();
+    const default_latest = new Date(curr.getTime() + DEFAULT_RANGE).toISOString();
+
     this.input = {
-      oldest: input.oldest ? verifyDate(input.oldest) : curr.toISOString().replace(/\.\d{3}Z$/, "Z"),
-      latest: input.latest
-        ? verifyDate(input.latest)
-        : new Date(after_one_week_ms).toISOString().replace(/\.\d{3}Z$/, "Z"),
-      limit: input.limit && input.limit <= 100 ? input.limit : 20,
+      oldest: resolveDate(input.oldest || default_oldest),
+      latest: resolveDate(input.latest || default_latest),
+      limit: Math.min(MAX_LIMIT, Math.max(1, input.limit ?? DEFAULT_LIMIT)),
       ...(input.channel && { channel: input.channel }),
       ...(input.cursor && { cursor: input.cursor }),
       ...(input.team_id && { team_id: input.team_id }),
@@ -40,23 +44,15 @@ export class ListScheduledMessagesCommand extends SlackCommand<
   }
 }
 
-const getMsByDay = (input: number) => input * 86400 * 1000;
+const resolveDate = (input: string): string => {
+  const utcZRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
 
-const verifyDate = (input: string): string => {
-  let error = new IngestkoreaError({
-    code: 400,
-    type: "Bad Request",
-    message: "Invalid Request",
-    description: "VerifyDate Error",
-  });
-
-  const isUTC = input.match(/Z/gi); // null
-  const isDate = input.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}/gi);
-  if (!isUTC || !isDate) {
-    error.error.description =
-      "latest or oldest params type must be in UTC string format, such as 2025-02-15T12:35:17Z or 2025-02-15T12:35:17.456Z.";
-    throw error;
+  if (!utcZRegex.test(input)) {
+    throw new SlackClientError({
+      type: "GENERAL_ERROR",
+      message: "date type must be in UTC string format, such as 2025-02-15T12:35:17.456Z",
+    });
   }
 
-  return input.replace(/\.\d{3}Z$/, "Z");
+  return input.replace(/\.\d+Z$/, "Z");
 };

@@ -1,5 +1,5 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "name": "@ingestkorea/client-slack",
   "description": "INGESTKOREA SDK Slack Client for Node.js.",
   "exports": {
@@ -43,8 +43,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@ingestkorea/util-error-handler": "^1.0.2",
-    "@ingestkorea/util-http-handler": "^1.0.0"
+    "@ingestkorea/util-http-handler": "^1.3.0"
   },
   "keywords": [
     "slack",

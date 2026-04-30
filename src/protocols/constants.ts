@@ -1,6 +1,5 @@
-import { IngestkoreaError, ingestkoreaErrorCodeChecker } from "@ingestkorea/util-error-handler";
-import { HttpResponse, collectBodyString, destroyStream } from "@ingestkorea/util-http-handler";
-import { ResponseMetadata, SlackErrorInfo } from "../models/index.js";
+import { HttpResponse, collectBodyString } from "@ingestkorea/util-http-handler";
+import { ResponseMetadata, SlackAPISuccess, SlackAPIFailure, SlackClientError } from "../models/index.js";
 import { INGESTKOREA_RETRY, INGESTKOREA_RETRY_DELAY } from "../middleware/constants.js";
 
 export const deserializeMetadata = (response: HttpResponse): ResponseMetadata => {
@@ -14,11 +13,11 @@ export const deserializeMetadata = (response: HttpResponse): ResponseMetadata =>
   };
 };
 
-export const deserializeSlackErrorInfo = (output: any): SlackErrorInfo => {
+export const deserializeSlackErrorInfo = (output: any, message: string = "unknown error"): SlackAPIFailure => {
   return {
-    ok: output.ok != null ? output.ok : undefined,
-    ...(output.error && { error: output.error }),
-    ...(output.errors && { errors: output.errors.filter((e: any) => e != null) }),
+    ok: false,
+    error: output.error ?? message,
+    errors: (output.errors || []).filter((e: any) => e != null),
   };
 };
 
@@ -33,52 +32,62 @@ const convertISO8601 = (input: number) => new Date(input).toISOString().replace(
 export const parseBody = async (output: HttpResponse): Promise<any> => {
   const { statusCode, headers, body: streamBody } = output;
 
-  let isValid = await verifyJsonHeader(headers["content-type"]);
-  let data = await collectBodyString(streamBody);
+  const isJson = isJsonResponse(headers["content-type"]);
 
-  if (data == "ok") {
-    data = JSON.stringify({ ok: true });
-    isValid = true;
-  }
+  try {
+    const data = await collectBodyString(streamBody);
 
-  if (!isValid) {
-    await destroyStream(streamBody);
-    let lastError = new IngestkoreaError({
-      code: ingestkoreaErrorCodeChecker(statusCode) ? statusCode : 400,
-      type: "Bad Request",
-      message: "Invalid Request",
-      description: "response content-type is not application/json",
+    if (data == "ok") {
+      const result: SlackAPISuccess = { ok: true };
+      return result;
+    }
+
+    if (!isJson) {
+      throw new SlackClientError({
+        type: "REQUEST_ERROR",
+        message: "response content-type is not application/json",
+      });
+    }
+
+    return data.length ? JSON.parse(data) : {};
+  } catch (e) {
+    throw new SlackClientError({
+      type: "REQUEST_ERROR",
+      message: e instanceof Error ? e.message : "parse response body error",
     });
-    throw lastError;
   }
-
-  if (data.length) return JSON.parse(data);
-  return {};
 };
 
-export const parseErrorBody = async (output: HttpResponse): Promise<void> => {
+export const parseErrorBody = async (output: HttpResponse): Promise<never> => {
   const { statusCode, headers, body: streamBody } = output;
 
-  let isValid = await verifyJsonHeader(headers["content-type"]);
-  let data = await collectBodyString(streamBody);
-
-  if (data == "used_url" || data == "expired_url" || data == "invalid_url") {
-    data = JSON.stringify({ ok: false, error: data });
-    isValid = true;
+  try {
+    const data = await collectBodyString(streamBody);
+    throw new SlackClientError({
+      type: "REQUEST_ERROR",
+      message: `${statusCode} - ${data.slice(0, 30)}...`,
+    });
+  } catch (e) {
+    throw e;
   }
-
-  await destroyStream(streamBody);
-
-  let lastError = new IngestkoreaError({
-    code: ingestkoreaErrorCodeChecker(statusCode) ? statusCode : 400,
-    type: "Bad Request",
-    message: "Invalid Request",
-    description: isValid && data.length ? JSON.parse(data) : "response content-type is not application/json",
-  });
-
-  throw lastError;
 };
 
-const verifyJsonHeader = async (contentType: string): Promise<boolean> => {
-  return /application\/json/gi.exec(contentType) ? true : false;
+const isJsonResponse = (contentType?: string): boolean => {
+  return contentType?.toLowerCase().includes("application/json") ?? false;
+};
+
+export const compact = <T>(obj: T): T => {
+  if (Array.isArray(obj)) {
+    return obj.map((item) => compact(item)) as any;
+  }
+
+  if (typeof obj === "object" && obj !== null) {
+    return Object.fromEntries(
+      Object.entries(obj)
+        .filter(([_, value]) => value !== undefined) // undefined 필드 제거
+        .map(([key, value]) => [key, compact(value)]) // 내부 값 재귀 처리
+    ) as any;
+  }
+
+  return obj;
 };

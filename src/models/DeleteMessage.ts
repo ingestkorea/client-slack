@@ -1,12 +1,11 @@
-import { SlackErrorInfo } from "./SlackErrorInfo.js";
+import { SlackAPIResult } from "./SlackAPI.js";
 
-export interface DeleteMessageRequest {
+export type DeleteMessageRequest = {
   ts: string;
   channel?: string;
-}
+};
 
-export interface DeleteMessageResult extends SlackErrorInfo {
-  ok?: boolean;
-  channel?: string;
-  ts?: string;
-}
+export type DeleteMessageResult = SlackAPIResult<{
+  ts: string;
+  channel: string;
+}>;

@@ -1,10 +1,8 @@
-import { SlackErrorInfo } from "./SlackErrorInfo.js";
+import { SlackAPIResult } from "./SlackAPI.js";
 
-export interface DeleteScheduledMessageRequest {
+export type DeleteScheduledMessageRequest = {
   scheduled_message_id: string;
   channel?: string;
-}
+};
 
-export interface DeleteScheduledMessageResult extends SlackErrorInfo {
-  ok?: boolean;
-}
+export type DeleteScheduledMessageResult = SlackAPIResult<{}>;

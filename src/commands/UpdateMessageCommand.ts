@@ -1,4 +1,5 @@
 import {
+  SlackClientResolvedConfig,
   SlackCommand,
   UpdateMessageRequest,
   UpdateMessageResult,
@@ -6,11 +7,10 @@ import {
   RequestSerializer,
   ResponseDeserializer,
 } from "../models/index.js";
-import { SlackClientResolvedConfig } from "../SlackClient.js";
 import { se_UpdateMessageCommand, de_UpdateMessageCommand } from "../protocols/index.js";
 
-export interface UpdateMessageCommandInput extends UpdateMessageRequest {}
-export interface UpdateMessageCommandOutput extends MetadataBearer, UpdateMessageResult {}
+export type UpdateMessageCommandInput = UpdateMessageRequest;
+export type UpdateMessageCommandOutput = MetadataBearer & UpdateMessageResult;
 
 export class UpdateMessageCommand extends SlackCommand<
   UpdateMessageCommandInput,
@@ -22,13 +22,13 @@ export class UpdateMessageCommand extends SlackCommand<
   deserializer: ResponseDeserializer<UpdateMessageCommandOutput, SlackClientResolvedConfig>;
   constructor(input: UpdateMessageCommandInput) {
     super(input);
-    let invalidBlocks = !input.blocks || !input.blocks.length;
+    const isOnlyText = !input.blocks || !input.blocks.length;
     this.input = {
       ts: input.ts,
       text: input.text,
       ...(input.channel && { channel: input.channel }),
       ...(input.blocks && { blocks: input.blocks }),
-      ...(invalidBlocks && { blocks: [{ type: "section", text: { type: "plain_text", text: input.text } }] }),
+      ...(isOnlyText && { blocks: [{ type: "section", text: { type: "plain_text", text: input.text } }] }),
     };
     this.serializer = se_UpdateMessageCommand;
     this.deserializer = de_UpdateMessageCommand;
