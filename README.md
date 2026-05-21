@@ -16,13 +16,13 @@ This SDK performs tasks such as the following automatically.
 - Retry requests
 - Handle error responses
 
-## Installing
+## Getting Started
+
+### Installing
 
 ```sh
 npm install @ingestkorea/client-slack
 ```
-
-## Getting Started
 
 ### Pre-requisites
 
@@ -70,22 +70,21 @@ To send a request, you:
 - Call `send` operation on client with command object as input.
 
 ```ts
-import { SendMessageCommandInput } from "@ingestkorea/client-slack";
+import { SlackClient, SendMessageCommand } from "@ingestkorea/client-slack";
 
 // a client can be shared by different commands.
 const client = new SlackClient({
   credentials: {
-    token: "YOUR_OAuth_TOKEN", // required // xoxb-xxxxxxxx
-    channel: "YOUR_CHANNEL_ID", // required
+    token: "OAUTH_TOKEN", // required // xoxb-xxxxxxxx
+    channel: "CHANNEL_ID", // required
   },
 });
 
-const params: SendMessageCommandInput = {
-  text: "Hello client-slack : " + new Date().toISOString(), // required
-  channel: "YOUR_CHANNEL_ID", // optional // this channelId overrides SlackClient config
-};
+const command = new SendMessageCommand({
+  text: "Hello client-slack", // required
+});
 
-const command = new SendMessageCommand(params);
+const output = await client.send(command);
 ```
 
 #### SendMessage (with Blocks)
@@ -103,6 +102,7 @@ If you need more information about Blocks, please visit [Slack Blocks Reference]
 import { SendMessageCommand, SendMessageCommandInput } from "@ingestkorea/client-slack";
 
 const params: SendMessageCommandInput = {
+  channel: "CHANNEL_ID", // optional // this channelId overrides SlackClient config
   text: "Hello client-slack",
   blocks: [
     {
@@ -217,48 +217,47 @@ const params: ListScheduledMessagesCommandInput = {
 const command = new ListScheduledMessagesCommand(params);
 ```
 
-#### Async/await
+### Async/await
 
 We recommend using `await` operator to wait for the promise returned by send operation as follows:
 
 ```ts
+import { SlackClient, SendMessageCommand, SlackClientError } from "@ingestkorea/client-slack";
+
+// a client can be shared by different commands.
+const client = new SlackClient({ ... });
+
 (async () => {
-  const start = process.hrtime.bigint();
   try {
-    // a client can be shared by different commands.
-    const data = await client.send(command);
-    console.dir(data, { depth: 5 });
+    const command = new SendMessageCommand({ ... });
+    const output = await client.send(command);
+    console.dir(output, { depth: 5 });
   } catch (err) {
-    console.log(err);
-  } finally {
-    let end = process.hrtime.bigint();
-    let duration = Number(end - start) / 1000000;
-    console.log("duration: " + duration + "ms");
+    if (err instanceof SlackClientError) {
+      ...
+    } else {
+      ....
+    }
   }
 })();
 ```
 
-#### Promises
-
-- You can also use Promise chaining to execute send operation.
-- Promises can also be called using .catch() and .finally() as follows:
-
-```ts
-const start = process.hrtime.bigint();
-
-client
-  .send(command)
-  .then((data) => {
-    console.dir(data, { depth: 5 });
-  })
-  .catch((err) => {
-    console.log(err);
-  })
-  .finally(() => {
-    let end = process.hrtime.bigint();
-    let duration = Number(end - start) / 1000000;
-    console.log("duration: " + duration + "ms");
-  });
+```json
+{
+  "$metadata": {
+    "httpStatusCode": 200,
+    "attempts": 1,
+    "totalRetryDelay": 0,
+    "requestId": "xxxxx",
+    "oauthScopes": "chat:write,xxx"
+  },
+  "ok": true,
+  "channel": "xxxxx",
+  "ts": "xxxxx.xxxxx",
+  "message": {
+    ...
+  }
+}
 ```
 
 ## Getting Help

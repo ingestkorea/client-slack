@@ -4,7 +4,7 @@ import { INGESTKOREA_USER_AGENT } from "./constants.js";
 export const middlewareIngestkoreaMetadata: Middleware = (next) => async (input, context) => {
   input.request.headers = {
     ...input.request.headers,
-    [INGESTKOREA_USER_AGENT]: "@ingestkorea/client-slack/1.3.x",
+    [INGESTKOREA_USER_AGENT]: "@ingestkorea/client-slack/1.4.x",
   };
 
   return next(input, context);

@@ -1,14 +1,16 @@
-export type SlackClientErrorType = "AUTH_ERROR" | "GENERAL_ERROR" | "REQUEST_ERROR" | "UNKNOWN_ERROR";
+import { HttpHandlerErrorCode } from "@ingestkorea/util-http-handler";
+
+type SlackClientSdkErrorCode = "SDK.AUTH_ERROR" | "SDK.GENERAL_ERROR" | "SDK.REQUEST_ERROR" | "SDK.UNKNOWN_ERROR";
+
+export type SlackClientErrorCode = HttpHandlerErrorCode | SlackClientSdkErrorCode;
 
 export class SlackClientError extends Error {
-  public readonly name: string;
+  public readonly code: SlackClientErrorCode;
   public readonly timestamp: string;
-  public readonly type: SlackClientErrorType;
-  constructor(info: { type?: SlackClientErrorType; message: string }) {
-    const { type = "GENERAL_ERROR", message } = info;
-    super(message);
-    this.name = `SDK.${type}`;
-    this.type = type;
+  constructor(input: { code: SlackClientErrorCode; message: string }) {
+    super(input.message);
+    this.name = "SlackClientError";
+    this.code = input.code;
     this.timestamp = new Date().toISOString();
   }
 }

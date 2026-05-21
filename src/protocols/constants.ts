@@ -1,15 +1,24 @@
 import { HttpResponse, collectBodyString } from "@ingestkorea/util-http-handler";
 import { ResponseMetadata, SlackAPISuccess, SlackAPIFailure, SlackClientError } from "../models/index.js";
-import { INGESTKOREA_RETRY, INGESTKOREA_RETRY_DELAY } from "../middleware/constants.js";
+import {
+  INGESTKOREA_RETRY,
+  INGESTKOREA_RETRY_DELAY,
+  SLACK_REQUEST_ID,
+  SLACK_OAUTH_SCOPES,
+} from "../middleware/constants.js";
 
 export const deserializeMetadata = (response: HttpResponse): ResponseMetadata => {
   const attempts = response.headers[INGESTKOREA_RETRY] || undefined;
   const totalRetryDelay = response.headers[INGESTKOREA_RETRY_DELAY] || undefined;
+  const requestId = response.headers[SLACK_REQUEST_ID] || undefined;
+  const oauthScopes = response.headers[SLACK_OAUTH_SCOPES] || undefined;
 
   return {
     httpStatusCode: response.statusCode,
     ...(attempts && { attempts: Number(attempts) }),
     ...(totalRetryDelay && { totalRetryDelay: Number(totalRetryDelay) }),
+    ...(requestId && { requestId }),
+    ...(oauthScopes && { oauthScopes }),
   };
 };
 
@@ -44,16 +53,19 @@ export const parseBody = async (output: HttpResponse): Promise<any> => {
 
     if (!isJson) {
       throw new SlackClientError({
-        type: "REQUEST_ERROR",
+        code: "SDK.REQUEST_ERROR",
         message: "response content-type is not application/json",
       });
     }
 
     return data.length ? JSON.parse(data) : {};
-  } catch (e) {
+  } catch (error) {
+    if (error instanceof SlackClientError) {
+      throw error;
+    }
     throw new SlackClientError({
-      type: "REQUEST_ERROR",
-      message: e instanceof Error ? e.message : "parse response body error",
+      code: "SDK.REQUEST_ERROR",
+      message: error instanceof Error ? error.message : "parse response body error",
     });
   }
 };
@@ -63,12 +75,20 @@ export const parseErrorBody = async (output: HttpResponse): Promise<never> => {
 
   try {
     const data = await collectBodyString(streamBody);
+    const summary = data ? data.slice(0, 50).trim() : "empty response";
+
     throw new SlackClientError({
-      type: "REQUEST_ERROR",
-      message: `${statusCode} - ${data.slice(0, 30)}...`,
+      code: "SDK.REQUEST_ERROR",
+      message: `HTTP ${statusCode} - ${summary}...`,
     });
-  } catch (e) {
-    throw e;
+  } catch (error) {
+    if (error instanceof SlackClientError) {
+      throw error;
+    }
+    throw new SlackClientError({
+      code: "SDK.REQUEST_ERROR",
+      message: error instanceof Error ? error.message : "parse error body error",
+    });
   }
 };
 

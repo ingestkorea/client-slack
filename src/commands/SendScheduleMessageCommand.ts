@@ -43,7 +43,7 @@ const resolvePostAt = (post_at: string): string => {
 
   if (!utcZRegex.test(post_at)) {
     throw new SlackClientError({
-      type: "GENERAL_ERROR",
+      code: "SDK.GENERAL_ERROR",
       message: "post_at type must be in UTC string format, such as 2025-02-15T12:35:17.456Z",
     });
   }
@@ -53,7 +53,7 @@ const resolvePostAt = (post_at: string): string => {
 
   if (scheduled - curr < MIN_DIFFER) {
     throw new SlackClientError({
-      type: "GENERAL_ERROR",
+      code: "SDK.GENERAL_ERROR",
       message: "post_at must differ from the current time by at least 30 seconds.",
     });
   }

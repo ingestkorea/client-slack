@@ -11,31 +11,40 @@ import { middlewareAuth, middlewareIngestkoreaMetadata, middlewareSign, middlewa
 
 export class SlackClient {
   private config: SlackClientResolvedConfig;
-  private httpHandler = new NodeHttpHandler({ connectionTimeout: 3000, socketTimeout: 3000 });
-  private requestHandler: Handler = async (input, context) => this.httpHandler.handle(input.request);
+  private httpHandler;
 
   constructor(config: SlackClientConfig) {
     this.config = {
       credentials: resolveCredentials(config),
+      httpHandler: {
+        connectionTimeout: config.httpHandler?.connectionTimeout ?? 2000,
+        socketTimeout: config.httpHandler?.socketTimeout ?? 3000,
+        keepAlive: config.httpHandler?.keepAlive ?? false,
+        family: 4,
+      },
     };
+    this.httpHandler = new NodeHttpHandler(this.config.httpHandler);
   }
 
   async send<T, P>(command: SlackCommand<T, P, SlackClientResolvedConfig>): Promise<P> {
     const { input, serializer, deserializer } = command;
 
     const middlewares: Middleware[] = [middlewareAuth, middlewareIngestkoreaMetadata, middlewareSign, middlewareRetry];
-    const handler = composeMiddleware(middlewares, this.requestHandler);
+    const finalHandler: Handler = async (input, context) => this.httpHandler.handle(input.request);
+    const handler = composeMiddleware(middlewares, finalHandler);
 
     try {
       const request = await serializer(input, this.config);
       const { response } = await handler({ request }, this.config);
       const output = await deserializer(response, this.config);
       return output;
-    } catch (err) {
-      if (err instanceof SlackClientError) throw err;
+    } catch (error) {
+      if (error instanceof SlackClientError) {
+        throw error;
+      }
       throw new SlackClientError({
-        type: "UNKNOWN_ERROR",
-        message: err instanceof Error ? err.message : "unknown error",
+        code: "SDK.UNKNOWN_ERROR",
+        message: error instanceof Error ? error.message : "unknown error",
       });
     }
   }
@@ -52,7 +61,7 @@ const resolveCredentials = (config: SlackClientConfig): SlackClientResolvedConfi
   const { credentials } = config;
 
   let error = new SlackClientError({
-    type: "AUTH_ERROR",
+    code: "SDK.AUTH_ERROR",
     message: "Credentials undefined",
   });
 

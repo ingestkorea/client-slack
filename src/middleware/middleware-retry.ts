@@ -1,5 +1,8 @@
+import { HttpHandlerError, HttpHandlerRetryableErrorCode } from "@ingestkorea/util-http-handler";
 import { Middleware, SlackClientError } from "../models/index.js";
 import { INGESTKOREA_REQUEST_LOG, INGESTKOREA_RETRY, INGESTKOREA_RETRY_DELAY } from "./constants.js";
+
+const isRetryableCode: HttpHandlerRetryableErrorCode[] = ["SDK.NETWORK_ERROR", "SDK.TIMEOUT"];
 
 export const middlewareRetry: Middleware = (next) => async (input, context) => {
   const MAX_RETRIES = 3;
@@ -10,7 +13,7 @@ export const middlewareRetry: Middleware = (next) => async (input, context) => {
   let attempts = 0;
   let totalRetryDelay = 0;
 
-  input.request.headers ??= {};
+  input.request.headers = input.request.headers ?? {};
 
   while (attempts < MAX_RETRIES) {
     attempts++;
@@ -26,11 +29,23 @@ export const middlewareRetry: Middleware = (next) => async (input, context) => {
 
       return { response };
     } catch (error) {
-      if (attempts >= MAX_RETRIES) {
-        throw new SlackClientError({
-          type: "REQUEST_ERROR",
-          message: error instanceof Error ? error.message : requestLog,
+      let currentError: SlackClientError;
+      if (error instanceof SlackClientError) {
+        currentError = error;
+      } else {
+        currentError = new SlackClientError({
+          code: error instanceof HttpHandlerError ? error.code : "SDK.UNKNOWN_ERROR",
+          message: error instanceof Error ? error.message : String(error),
         });
+      }
+
+      const isRetryable = isRetryableCode.some((code) => code === currentError.code);
+      if (!isRetryable) {
+        throw currentError;
+      }
+
+      if (attempts >= MAX_RETRIES) {
+        throw currentError;
       }
 
       const exp = BASE_DELAY_MS * 2 ** (attempts - 1);
@@ -46,7 +61,7 @@ export const middlewareRetry: Middleware = (next) => async (input, context) => {
   }
 
   throw new SlackClientError({
-    type: "UNKNOWN_ERROR",
+    code: "SDK.UNKNOWN_ERROR",
     message: "Unexpected retry loop termination",
   });
 };

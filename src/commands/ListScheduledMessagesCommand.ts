@@ -13,7 +13,7 @@ import { se_ListScheduledMessagesCommand, de_ListScheduledMessagesCommand } from
 export type ListScheduledMessagesCommandInput = ListScheduledMessagesRequest;
 export type ListScheduledMessagesCommandOutput = MetadataBearer & ListScheduledMessagesResult;
 
-const DEFAULT_RANGE = 7 * 86_400 * 1_000;
+const DEFAULT_RANGE = 7 * 86400 * 1000;
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
 
@@ -49,7 +49,7 @@ const resolveDate = (input: string): string => {
 
   if (!utcZRegex.test(input)) {
     throw new SlackClientError({
-      type: "GENERAL_ERROR",
+      code: "SDK.GENERAL_ERROR",
       message: "date type must be in UTC string format, such as 2025-02-15T12:35:17.456Z",
     });
   }
